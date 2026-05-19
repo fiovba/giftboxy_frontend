@@ -1,0 +1,160 @@
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import {
+  FiUser,
+  FiMail,
+  FiMapPin,
+  FiSave,
+} from "react-icons/fi";
+
+import { getMe } from "../../services/authService";
+
+function BuyerProfile() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    location: "",
+  });
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const res = await getMe();
+
+      const user = res.data;
+
+      setForm({
+        fullName: user.fullName || user.name || "",
+        email: user.email || "",
+        location: user.location || "",
+      });
+    } catch (err) {
+      console.log(err);
+      toast.error("Profile could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+
+    setSaving(true);
+
+    try {
+      toast.success("Profile updated.");
+    } catch (err) {
+      console.log(err);
+      toast.error("Update failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="w-10 h-10 border-4 border-[#D90452] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-5 py-10">
+      <p className="text-[#D90452] text-xs font-black uppercase tracking-widest">
+        Buyer Profile
+      </p>
+
+      <h1 className="mt-2 text-4xl font-black">
+        My Account
+      </h1>
+
+      <p className="mt-2 text-[#7A7272]">
+        Manage your account information.
+      </p>
+
+      <form
+        onSubmit={handleSave}
+        className="mt-8 bg-white rounded-[30px] border border-[#EFE4DF] p-6 space-y-5"
+      >
+        <div>
+          <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262] block mb-2">
+            Full Name
+          </label>
+
+          <div className="relative">
+            <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B7A9A2]" />
+
+            <input
+              type="text"
+              name="fullName"
+              value={form.fullName}
+              onChange={handleChange}
+              className="w-full h-14 rounded-full border border-[#EFE4DF] bg-[#FCFAF8] pl-12 pr-4 outline-none"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262] block mb-2">
+            Email
+          </label>
+
+          <div className="relative">
+            <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B7A9A2]" />
+
+            <input
+              type="email"
+              value={form.email}
+              disabled
+              className="w-full h-14 rounded-full border border-[#EFE4DF] bg-gray-100 pl-12 pr-4 outline-none"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262] block mb-2">
+            Location
+          </label>
+
+          <div className="relative">
+            <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B7A9A2]" />
+
+            <input
+              type="text"
+              name="location"
+              value={form.location}
+              onChange={handleChange}
+              placeholder="Baku, Azerbaijan"
+              className="w-full h-14 rounded-full border border-[#EFE4DF] bg-[#FCFAF8] pl-12 pr-4 outline-none"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full h-14 rounded-full bg-[#D90452] text-white font-black flex items-center justify-center gap-2"
+        >
+          <FiSave />
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+export default BuyerProfile;
