@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { sellerService } from "../../services/sellerService";
 import { categoryService } from "../../services/categoryService";
 import { imageService } from "../../services/imageService";
+import { cacheImageId, getCachedImageId } from "../../utils/imageIdCache";
 
 function AddProduct() {
   const navigate = useNavigate();
@@ -85,15 +86,15 @@ function AddProduct() {
         const normalized = product.images.map((img) => {
           if (typeof img === "string") {
             const url = img.startsWith("http") ? img : `${BASE}${img}`;
-            // Extract numeric DB id from URL query/path, or Cloudinary filename as fallback
-            const cloudinaryId = url.split("/").pop()?.split("?")[0]?.split(".")[0] || null;
-            return { id: cloudinaryId, url };
+            // Try backend-provided ID first, then localStorage cache
+            const cachedId = getCachedImageId(url);
+            return { id: cachedId, url };
           }
           const url = (img.url || img.imageUrl || "").startsWith("http")
             ? (img.url || img.imageUrl)
             : `${BASE}${img.url || img.imageUrl || ""}`;
-          const fallbackId = url.split("/").pop()?.split("?")[0]?.split(".")[0] || null;
-          return { id: img.id ?? img.imageId ?? fallbackId, url };
+          const cachedId = getCachedImageId(url);
+          return { id: img.id ?? img.imageId ?? cachedId ?? null, url };
         });
         setExistingImages(normalized);
         setImagePreviews(normalized.map((i) => i.url));
@@ -162,13 +163,11 @@ function AddProduct() {
       const blobIndex = blobPreviews.indexOf(preview);
       setImageFiles((prev) => prev.filter((_, i) => i !== blobIndex));
     } else {
-      // Existing backend image removed — track for deletion
+      // Existing backend image removed — track for deletion if we have integer ID
       const existing = existingImages.find((img) => img.url === preview);
-      const imgId = existing?.id
-        ?? preview.split("/").pop()?.split("?")[0]?.split(".")[0]
-        ?? null;
-      if (imgId) {
-        setRemovedImageIds((prev) => [...prev, imgId]);
+      const imgId = existing?.id ?? getCachedImageId(preview);
+      if (imgId && Number.isInteger(Number(imgId))) {
+        setRemovedImageIds((prev) => [...prev, Number(imgId)]);
       }
       setExistingImages((prev) => prev.filter((img) => img.url !== preview));
     }
@@ -219,7 +218,11 @@ function AddProduct() {
           for (const file of imageFiles) {
             const formData = new FormData();
             formData.append("file", file);
-            await imageService.uploadImage(productId, formData);
+            const uploadRes = await imageService.uploadImage(productId, formData);
+            // Cache integer imageId → url so we can delete it in future edits
+            const imgId = uploadRes?.data?.id ?? uploadRes?.data?.imageId;
+            const imgUrl = uploadRes?.data?.url ?? uploadRes?.data?.imageUrl;
+            if (imgId && imgUrl) cacheImageId(imgUrl, imgId);
           }
         } catch {
           toast.error("Product saved but image upload failed.");
