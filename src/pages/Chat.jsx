@@ -10,7 +10,6 @@ import {
   getConversationMessages,
   createConversation,
   sendMessage,
-  markAsRead,
 } from "../services/chatService";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "https://giftboxy-backend-1.onrender.com";
@@ -114,10 +113,10 @@ function Chat() {
       .then((res) => setMessages(parseList(res.data)))
       .catch(() => {});
 
+    // Update unread count locally (no backend endpoint for marking read)
     setConversations((prev) =>
       prev.map((c) => (c.id === activeConv.id ? { ...c, unreadCount: 0 } : c))
     );
-    markAsRead(activeConv.id).catch(() => {});
 
     if (connectionRef.current?.state === "Connected") {
       connectionRef.current.invoke("JoinConversation", String(activeConv.id)).catch(() => {});

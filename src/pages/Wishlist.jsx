@@ -63,8 +63,7 @@ function Wishlist() {
         product.productId;
 
       if (!productId) {
-        toast.error("Product id tapılmadı.");
-        console.log("Wishlist item:", item);
+        toast.error("Product ID not found.");
         return;
       }
 
@@ -74,8 +73,7 @@ function Wishlist() {
       });
 
       toast.success("Moved to cart.");
-    } catch (error) {
-      console.log("Move to cart error:", error.response?.data || error);
+    } catch {
       toast.error("Could not move to cart.");
     }
   };
@@ -88,15 +86,13 @@ function Wishlist() {
         item.wishlistId;
 
       if (!wishlistItemId) {
-        console.log("Wishlist remove item:", item);
-        toast.error("Wishlist item id tapılmadı.");
+        toast.error("Item ID not found.");
         return;
       }
 
       await removeFromWishlist(wishlistItemId);
       toast.success("Removed from wishlist.");
-    } catch (error) {
-      console.log("Remove wishlist error:", error.response?.data || error);
+    } catch {
       toast.error("Could not remove item.");
     }
   };

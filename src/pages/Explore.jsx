@@ -38,8 +38,6 @@ function Explore() {
       .then((res) => {
         const data = res.data;
 
-        console.log("PRODUCTS DATA:", data);
-
         if (Array.isArray(data)) {
           setAllProducts(data);
         } else if (Array.isArray(data?.data)) {

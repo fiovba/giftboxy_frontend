@@ -294,7 +294,13 @@ function SellerProfile() {
               Change Password
             </Link>
 
-            
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-3 w-full bg-red-50 text-[#D90452] py-3.5 rounded-full font-black text-sm"
+            >
+              Logout
+            </button>
           </div>
         </aside>
       </div>

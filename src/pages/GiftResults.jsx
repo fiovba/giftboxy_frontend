@@ -75,17 +75,11 @@ function GiftResults() {
         maxBudget: budgetRange.maxBudget,
       };
 
-      console.log("GIFT FINDER PAYLOAD:", payload);
-
       try {
         const res = await giftFinder(payload);
-
-        console.log("GIFT FINDER RESPONSE:", res.data);
-
         const normalized = normalizeProductList(res.data);
         setResults(normalized);
-      } catch (err) {
-        console.log("GIFT FINDER ERROR:", err.response?.data || err);
+      } catch {
         setResults([]);
       } finally {
         setLoading(false);

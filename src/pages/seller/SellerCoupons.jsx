@@ -56,6 +56,7 @@ function SellerCoupons() {
         minimumAmount: form.minimumAmount ? Number(form.minimumAmount) : 0,
         usageLimit: form.usageLimit ? Number(form.usageLimit) : 0,
         expiryDate: form.expiryDate ? new Date(form.expiryDate).toISOString() : null,
+        isActive: true,
       });
       toast.success("Coupon created!");
       setShowForm(false);

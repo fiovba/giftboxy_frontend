@@ -82,8 +82,8 @@ export function AuthProvider({ children }) {
       if (token) {
         await authService.logout();
       }
-    } catch (error) {
-      console.log("Logout request failed:", error);
+    } catch {
+      // logout request failure is non-critical
     } finally {
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");

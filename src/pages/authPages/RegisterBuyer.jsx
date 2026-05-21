@@ -65,7 +65,7 @@ function RegisterBuyer() {
 
     setLoading(true);
     try {
-      await buyerRegister({ name: form.name, email: form.email, password: form.password });
+      await buyerRegister({ name: form.name, email: form.email, password: form.password, interests: selectedInterests });
       toast.success("Account created! Please log in.");
       navigate("/login");
     } catch (error) {

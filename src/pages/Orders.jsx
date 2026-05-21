@@ -4,6 +4,7 @@ import { FiChevronRight, FiX, FiStar } from "react-icons/fi";
 import { orderService } from "../services/orderService";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
+import api from "../services/api";
 
 const STATUS_MAP = {
   1: "pending",
@@ -93,12 +94,8 @@ function Orders() {
 
     if (productId) {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(
-          `${BASE_URL}/api/products`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const data = await res.json();
+        const res = await api.get("/products");
+        const data = res.data;
         const list = Array.isArray(data) ? data
           : Array.isArray(data?.items) ? data.items
           : Array.isArray(data?.data) ? data.data : [];

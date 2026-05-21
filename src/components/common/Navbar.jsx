@@ -117,7 +117,7 @@ function Navbar() {
                   className="flex items-center gap-2 bg-white px-4 py-3 rounded-full text-sm font-bold text-[#3B2727]"
                 >
                   <FiUser />
-                  Xoş gəldiz, {user?.name?.split(" ")[0]}
+                  Welcome, {user?.name?.split(" ")[0]}
                   <FiChevronDown />
                 </button>
 
@@ -246,7 +246,7 @@ function Navbar() {
                 </Link>
               ) : (
                 <div className="bg-white rounded-2xl p-4">
-                  <p className="font-black">Xoş gəldiz, {user?.name?.split(" ")[0]}</p>
+                  <p className="font-black">Welcome, {user?.name?.split(" ")[0]}</p>
                   <button
                     onClick={handleLogout}
                     className="mt-3 w-full bg-[#F9DDE5] text-[#C90046] py-3 rounded-full font-black flex items-center justify-center gap-2"

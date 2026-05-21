@@ -15,7 +15,6 @@ export const sellerService = {
   getSellerProducts: async () => {
     const res = await api.get("/products/my-products");
     const data = res.data;
-    console.log("MY PRODUCTS RAW:", data);
     if (Array.isArray(data)) return data;
     if (Array.isArray(data?.data)) return data.data;
     if (Array.isArray(data?.items)) return data.items;

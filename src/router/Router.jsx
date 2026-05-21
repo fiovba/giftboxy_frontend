@@ -2,6 +2,8 @@ import { createBrowserRouter } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
 import ChatLayout from "../layouts/ChatLayout";
+import ProtectedRoute from "../components/common/ProtectedRoute";
+
 import Home from "../pages/Home";
 import Explore from "../pages/Explore";
 import GiftFinder from "../pages/GiftFinder";
@@ -28,6 +30,11 @@ import ChangePassword from "../pages/authPages/ChangePassword";
 import BuyerProfile from "../pages/buyer/BuyerProfile";
 import About from "../pages/About";
 
+const seller = (el) => (
+  <ProtectedRoute requiredRole="seller">{el}</ProtectedRoute>
+);
+const auth = (el) => <ProtectedRoute>{el}</ProtectedRoute>;
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -38,39 +45,45 @@ export const router = createBrowserRouter([
       { path: "gift-finder", element: <GiftFinder /> },
       { path: "gift-results", element: <GiftResults /> },
       { path: "product/:slug", element: <ProductDetails /> },
-      { path: "wishlist", element: <Wishlist /> },
-      { path: "cart", element: <Cart /> },
-      { path: "orders", element: <Orders /> },
-      { path: "change-password", element: <ChangePassword /> },
-      { path: "profile", element: <BuyerProfile/> },
       { path: "about", element: <About /> },
+      { path: "wishlist",        element: auth(<Wishlist />) },
+      { path: "cart",            element: auth(<Cart />) },
+      { path: "orders",          element: auth(<Orders />) },
+      { path: "profile",         element: auth(<BuyerProfile />) },
+      { path: "change-password", element: auth(<ChangePassword />) },
     ],
+  },
+  // Chat uses its own full-screen layout (no footer)
+  {
+    path: "/chat",
+    element: <ChatLayout />,
+    children: [{ index: true, element: auth(<Chat />) }],
   },
   {
-    path: "/",
+    path: "/messages",
     element: <ChatLayout />,
-    children: [
-      { path: "chat", element: <Chat /> },
-      { path: "messages", element: <Chat /> },
-    ],
+    children: [{ index: true, element: auth(<Chat />) }],
   },
-  { path: "/login", element: <Login /> },
-  { path: "/register-buyer", element: <RegisterBuyer /> },
+  { path: "/login",           element: <Login /> },
+  { path: "/register-buyer",  element: <RegisterBuyer /> },
   { path: "/register-seller", element: <RegisterSeller /> },
   {
     path: "/seller",
-    element: <SellerLayout />,
+    element: seller(<SellerLayout />),
     children: [
-      { path: "profile", element: <SellerProfile /> },
-      { path: "dashboard", element: <SellerDashboard /> },
-      { path: "products", element: <SellerProducts /> },
-      { path: "orders", element: <SellerOrders /> },
-      { path: "messages", element: <Chat /> },
-      { path: "add-product", element: <AddProduct /> },
+      { path: "profile",        element: <SellerProfile /> },
+      { path: "dashboard",      element: <SellerDashboard /> },
+      { path: "products",       element: <SellerProducts /> },
+      { path: "orders",         element: <SellerOrders /> },
+      { path: "add-product",    element: <AddProduct /> },
       { path: "edit-product/:id", element: <AddProduct /> },
-      { path: "questions", element: <SellerQuestions /> },
-      { path: "coupons", element: <SellerCoupons /> },
+      { path: "questions",      element: <SellerQuestions /> },
+      { path: "coupons",        element: <SellerCoupons /> },
       { path: "change-password", element: <ChangePassword /> },
+      {
+        path: "messages",
+        element: <Chat />,
+      },
     ],
   },
 ]);

@@ -53,7 +53,7 @@ function AddProduct() {
 
     sellerService.getProductById(id).then((product) => {
       if (!product) {
-        toast.error("Product tapılmadı.");
+        toast.error("Product not found.");
         navigate("/seller/products");
         return;
       }
@@ -93,7 +93,7 @@ function AddProduct() {
         setImagePreviews(normalized.map((i) => i.url));
       }
     }).catch(() => {
-      toast.error("Product tapılmadı.");
+      toast.error("Product not found.");
       navigate("/seller/products");
     });
   }, [id, isEditMode, navigate, sellerId]);
