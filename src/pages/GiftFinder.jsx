@@ -23,6 +23,7 @@ function GiftFinder() {
   const [input, setInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [products, setProducts] = useState([]);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [lastParams, setLastParams] = useState(null);
   const [aiCard, setAiCard] = useState("");
@@ -40,65 +41,106 @@ function GiftFinder() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, aiLoading]);
 
+  // Score a product by how closely it matches user's keywords + interest
+  const scoreProduct = (product, keywords, interest) => {
+    const title = (product.title || "").toLowerCase();
+    const desc  = (product.description || "").toLowerCase();
+    const cat   = (product.category || "").toLowerCase();
+    const tags  = (Array.isArray(product.tags) ? product.tags.join(" ") : "").toLowerCase();
+    let score = 0;
+    for (const kw of keywords) {
+      if (title.includes(kw))  score += 100; // exact keyword in title = top priority
+      if (desc.includes(kw))   score += 30;
+      if (cat.includes(kw))    score += 60;
+      if (tags.includes(kw))   score += 20;
+    }
+    if (cat.includes(interest.toLowerCase())) score += 25;
+    score += (product.rating || 0) * 3;
+    return score;
+  };
+
+  const fetchAllFromApi = async (interest, base) => {
+    // Try 1: full filter
+    let list = normalizeProductList((await giftFinder(base)).data);
+
+    // Try 2: no budget constraint
+    if (list.length === 0 && (base.minBudget > 0 || base.maxBudget < 99999)) {
+      list = normalizeProductList((await giftFinder({ ...base, minBudget: 0, maxBudget: 99999 })).data);
+    }
+
+    // Try 3: relax recipient/occasion with different combos
+    if (list.length === 0) {
+      const combos = [
+        { recipient: "Partner", occasion: "Birthday" },
+        { recipient: "Mom",     occasion: "Birthday" },
+        { recipient: "Friend",  occasion: "Birthday" },
+        { recipient: "Partner", occasion: "Valentine" },
+        { recipient: "Partner", occasion: "Anniversary" },
+      ];
+      for (const combo of combos) {
+        list = normalizeProductList((await giftFinder({ ...combo, interest, minBudget: 0, maxBudget: 99999 })).data);
+        if (list.length > 0) break;
+      }
+    }
+
+    // Try 4 (nuclear): all products, client-side keyword filter
+    if (list.length === 0) {
+      const allRes = await getProducts();
+      const allRaw = allRes.data?.data || allRes.data?.items || allRes.data?.products || allRes.data || [];
+      const kw = interest.toLowerCase();
+      list = (Array.isArray(allRaw) ? allRaw : [])
+        .filter((p) => {
+          const c = (p.categoryName || p.categorySlug || p.category || "").toLowerCase();
+          const t = (p.title || p.name || "").toLowerCase();
+          const d = (p.description || "").toLowerCase();
+          return c.includes(kw) || t.includes(kw) || d.includes(kw);
+        })
+        .map(normalizeProduct);
+    }
+    return list;
+  };
+
   const fetchProducts = async (params) => {
     setProductsLoading(true);
+    setRelatedProducts([]);
     try {
-      const interest = params.interest || "Jewelry";
+      const interest  = params.interest  || "Jewelry";
+      const keywords  = params.keywords  || [];
+      const strict    = params.strict    || false;
+      const related   = params.relatedInterests || [];
       const base = {
         recipient: params.recipient || "Partner",
-        occasion: params.occasion || "Birthday",
+        occasion:  params.occasion  || "Birthday",
         interest,
         minBudget: params.minBudget ?? 0,
         maxBudget: params.maxBudget ?? 99999,
       };
 
-      // Try 1: full filter
-      let list = normalizeProductList((await giftFinder(base)).data);
-      console.log("[fetchProducts] try1:", list.length, base);
-
-      // Try 2: remove budget
-      if (list.length === 0 && (base.minBudget > 0 || base.maxBudget < 99999)) {
-        list = normalizeProductList((await giftFinder({ ...base, minBudget: 0, maxBudget: 99999 })).data);
-        console.log("[fetchProducts] try2 (no budget):", list.length);
+      // Primary products — ranked by keyword relevance
+      let primary = await fetchAllFromApi(interest, base);
+      if (keywords.length > 0) {
+        primary = primary
+          .map((p) => ({ ...p, _score: scoreProduct(p, keywords, interest) }))
+          .sort((a, b) => b._score - a._score);
       }
+      setProducts(primary);
 
-      // Try 3: different recipient/occasion combos with same interest
-      if (list.length === 0) {
-        const combos = [
-          { recipient: "Partner", occasion: "Birthday" },
-          { recipient: "Mom",     occasion: "Birthday" },
-          { recipient: "Friend",  occasion: "Birthday" },
-          { recipient: "Partner", occasion: "Valentine" },
-          { recipient: "Partner", occasion: "Anniversary" },
-        ];
-        for (const combo of combos) {
-          list = normalizeProductList((await giftFinder({ ...combo, interest, minBudget: 0, maxBudget: 99999 })).data);
-          if (list.length > 0) { console.log("[fetchProducts] try3 combo hit:", combo); break; }
-        }
+      // Related products — only if not strict and user is open to suggestions
+      if (!strict && related.length > 0) {
+        const seenIds = new Set(primary.map((p) => p.id));
+        const relLists = await Promise.all(
+          related.slice(0, 2).map((rel) =>
+            fetchAllFromApi(rel, { ...base, interest: rel }).catch(() => [])
+          )
+        );
+        const relFlat = relLists
+          .flat()
+          .filter((p) => !seenIds.has(p.id))
+          .map((p) => ({ ...p, _score: scoreProduct(p, keywords, rel => rel) }))
+          .sort((a, b) => b._score - a._score)
+          .slice(0, 6);
+        setRelatedProducts(relFlat);
       }
-
-      // Try 4 (nuclear): load all products, filter client-side by interest keyword
-      if (list.length === 0) {
-        console.log("[fetchProducts] try4: client-side filter by interest keyword");
-        const allRes = await getProducts();
-        const allRaw =
-          allRes.data?.data || allRes.data?.items || allRes.data?.products ||
-          allRes.data || [];
-        const keyword = interest.toLowerCase();
-        list = (Array.isArray(allRaw) ? allRaw : [])
-          .filter((p) => {
-            const cat = (p.categoryName || p.categorySlug || p.category || "").toLowerCase();
-            const title = (p.title || p.name || "").toLowerCase();
-            const desc = (p.description || "").toLowerCase();
-            const tags = (p.tags || []).join(" ").toLowerCase();
-            return cat.includes(keyword) || title.includes(keyword) ||
-                   desc.includes(keyword) || tags.includes(keyword);
-          })
-          .map(normalizeProduct);
-        console.log("[fetchProducts] try4 results:", list.length);
-      }
-
-      setProducts(list);
     } catch (e) {
       console.error("[fetchProducts] error:", e);
       setProducts([]);
@@ -148,6 +190,7 @@ function GiftFinder() {
   const reset = () => {
     setMessages([INITIAL_MESSAGE]);
     setProducts([]);
+    setRelatedProducts([]);
     setLastParams(null);
     setAiCard("");
     setInput("");
@@ -345,6 +388,7 @@ function GiftFinder() {
               <p className="text-[10px] font-black text-[#D90452] uppercase tracking-widest mb-4">
                 {products.length} gift{products.length !== 1 ? "s" : ""} found
               </p>
+              {/* Primary results */}
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 anim-stagger">
                 {products.map((product) => (
                   <div key={product.id} className="anim-fade-up">
@@ -352,6 +396,26 @@ function GiftFinder() {
                   </div>
                 ))}
               </div>
+
+              {/* Related / "You might also like" — only when not strict */}
+              {relatedProducts.length > 0 && (
+                <div className="mt-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-sm">✨</span>
+                    <p className="text-[10px] font-black text-[#A0918B] uppercase tracking-widest">
+                      You might also like
+                    </p>
+                  </div>
+                  <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 anim-stagger">
+                    {relatedProducts.map((product) => (
+                      <div key={product.id} className="anim-fade-up opacity-90">
+                        <ExploreProductCard product={product} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-8 flex gap-3 flex-wrap">
                 <Link
                   to={"/gift-results?recipient=" + lastParams.recipient + "&occasion=" + lastParams.occasion + "&interest=" + lastParams.interest}
