@@ -11,6 +11,7 @@ function GiftResults() {
   const occasion = searchParams.get("occasion") || "";
   const interest = searchParams.get("interest") || "";
   const budget = searchParams.get("budget") || "";
+  const aiMessage = searchParams.get("aiMessage") || "";
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,6 +112,17 @@ function GiftResults() {
             Based on your preferences, we curated thoughtful gift ideas matching
             the occasion, interests, and budget you selected.
           </p>
+
+          {/* AI personalized message */}
+          {aiMessage && (
+            <div className="mt-6 bg-white/70 backdrop-blur-sm border border-[#F8DCE5] rounded-[20px] px-5 py-4 max-w-2xl flex items-start gap-3 anim-fade-up">
+              <span className="text-2xl flex-shrink-0">✨</span>
+              <div>
+                <p className="text-xs font-black text-[#D90452] uppercase tracking-wider mb-1">AI Recommendation</p>
+                <p className="text-sm text-[#1E1B1B] leading-relaxed">{aiMessage}</p>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-3 mt-6">
             {[recipient, occasion, interest, budget].filter(Boolean).map((item) => (
