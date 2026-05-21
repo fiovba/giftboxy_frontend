@@ -51,7 +51,7 @@ function Navbar() {
 
   return (
     <header className="bg-[#F8F1EC] sticky top-0 z-[100] border-b border-[#EADFDA]">
-      <div className="w-full bg-[#F8F1EC]">
+      <div id="main-navbar" className="w-full bg-[#F8F1EC]">
         {/* TOP NAV */}
         <div className="px-4 sm:px-6 py-3 flex items-center justify-between gap-4 border-b border-[#EADFDA]">
           <Link to="/" className="flex items-center gap-2 shrink-0">

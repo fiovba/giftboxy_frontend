@@ -3,34 +3,25 @@ import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { useAuth } from "../context/AuthContext";
 
-const FULLSCREEN_PATHS = ["/gift-finder"];
+// Pages where footer should be hidden
+const NO_FOOTER_PATHS = ["/gift-finder"];
 
 function MainLayout() {
   const { isSeller, loading } = useAuth();
   const { pathname } = useLocation();
-  const fullscreen = FULLSCREEN_PATHS.includes(pathname);
+  const hideFooter = NO_FOOTER_PATHS.includes(pathname);
 
   if (!loading && isSeller) {
     return <Navigate to="/seller/dashboard" replace />;
   }
 
   return (
-    <div
-      className={
-        "flex flex-col bg-[#FFF8F5] text-[#2D2D2D] " +
-        (fullscreen ? "h-screen overflow-hidden" : "min-h-screen")
-      }
-    >
+    <div className="min-h-screen flex flex-col bg-[#FFF8F5] text-[#2D2D2D]">
       <Navbar />
-      <main
-        className={
-          "relative z-0 " +
-          (fullscreen ? "flex-1 flex flex-col min-h-0 overflow-hidden" : "flex-1")
-        }
-      >
+      <main className="flex-1 relative z-0">
         <Outlet />
       </main>
-      {!fullscreen && <Footer />}
+      {!hideFooter && <Footer />}
     </div>
   );
 }
