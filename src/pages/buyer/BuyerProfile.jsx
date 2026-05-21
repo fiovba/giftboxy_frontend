@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { FiUser, FiMail, FiMapPin, FiSave, FiPhone } from "react-icons/fi";
 
 import { buyerProfileService } from "../../services/buyerProfileService";
+import { authService } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
 
 function BuyerProfile() {
@@ -22,8 +23,19 @@ function BuyerProfile() {
 
   const loadProfile = async () => {
     try {
-      const res = await buyerProfileService.getBuyerProfile();
-      const data = res.data;
+      let data;
+      try {
+        const res = await buyerProfileService.getBuyerProfile();
+        data = res.data;
+      } catch (err) {
+        if (err?.response?.status === 404 || err?.response?.status === 405) {
+          // Endpoint not yet available — fall back to auth/me
+          const res = await authService.getMe();
+          data = res.data;
+        } else {
+          throw err;
+        }
+      }
       setForm({
         name: data.name || data.fullName || "",
         email: data.email || "",
@@ -50,15 +62,19 @@ function BuyerProfile() {
         location: form.location,
         phoneNumber: form.phoneNumber,
       });
-      // Refresh auth context so avatar/name updates everywhere (chat, navbar)
       await getMe();
       toast.success("Profile updated successfully!");
     } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.title ||
-        "Update failed.";
-      toast.error(msg);
+      if (err?.response?.status === 404 || err?.response?.status === 405) {
+        // Endpoint not yet available on backend
+        toast.error("Profile update is not available yet.");
+      } else {
+        const msg =
+          err?.response?.data?.message ||
+          err?.response?.data?.title ||
+          "Update failed.";
+        toast.error(msg);
+      }
     } finally {
       setSaving(false);
     }
