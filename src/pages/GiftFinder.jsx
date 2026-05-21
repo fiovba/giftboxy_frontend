@@ -8,14 +8,14 @@ import ExploreProductCard from "../components/explore/ExploreProductCard";
 
 const INITIAL_MESSAGE = {
   role: "ai",
-  text: "Salam! Mən Gifti-yəm 🎁 Sizə mükəmməl hədiyyəni tapmaqda kömək edəcəyəm! Bu gün kim üçün hədiyyə axtarırsınız?",
+  text: "Hey! I'm Giftie 🎁 Tell me about who you're shopping for and I'll find the perfect gift!",
 };
 
 const SUGGESTIONS = [
-  "Anama ad günü üçün 🎂",
-  "Sevgilisinə Sevgililər günü 💝",
-  "Dostum üçün toy hədiyyəsi 💍",
-  "Məzuniyyət, büdcə 50$ 🎓",
+  "My mom's birthday 🎂",
+  "Valentine's for my girlfriend 💝",
+  "Wedding gift for a friend 💍",
+  "Graduation gift, $50 budget 🎓",
 ];
 
 function GiftFinder() {
@@ -135,7 +135,7 @@ function GiftFinder() {
         </div>
         <button
           onClick={reset}
-          title="Yeni söhbət"
+          title="New conversation"
           className="w-8 h-8 rounded-full hover:bg-[#FDF0F4] flex items-center justify-center text-[#C0A8B0] hover:text-[#D90452] transition"
         >
           <FiRefreshCw size={13} />
@@ -188,7 +188,7 @@ function GiftFinder() {
         {messages.length === 1 && !aiLoading && (
           <div className="pt-1 space-y-2">
             <p className="text-[10px] text-[#C0B0AA] font-bold uppercase tracking-widest text-center">
-              Sürətli başlanğıc
+              Quick start
             </p>
             {SUGGESTIONS.map((s) => (
               <button
@@ -218,7 +218,7 @@ function GiftFinder() {
                 sendMessage();
               }
             }}
-            placeholder="Kim üçün hədiyyə axtarırsınız?.."
+            placeholder="Tell me who you're shopping for..."
             className="flex-1 bg-transparent outline-none resize-none text-sm text-[#1E1B1B] placeholder:text-[#C0B0AA] max-h-24"
             rows={1}
           />
@@ -231,7 +231,7 @@ function GiftFinder() {
           </button>
         </div>
         <p className="text-[10px] text-[#D0C0BA] text-center mt-1.5">
-          Enter — göndər · Shift+Enter — yeni sətir
+          Enter to send · Shift+Enter for new line
         </p>
       </div>
     </div>
@@ -250,9 +250,9 @@ function GiftFinder() {
               ✨
             </div>
           </div>
-          <h2 className="text-2xl font-black text-[#1E1B1B]">Hədiyyə ideyaları burada görünəcək</h2>
+          <h2 className="text-2xl font-black text-[#1E1B1B]">Gift ideas appear here</h2>
           <p className="mt-2 text-[#A0918B] max-w-xs text-sm leading-relaxed">
-            Gifti ilə söhbət et, o da sənə xüsusi seçilmiş hədiyyələr təqdim edəcək.
+            Chat with Giftie and I'll curate personalized gift recommendations just for you.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 max-w-[280px] w-full">
             {["Jewelry 💍", "Home Decor 🏡", "Beauty ✨", "Personalized 🖊️"].map((tag) => (
@@ -267,7 +267,7 @@ function GiftFinder() {
       {productsLoading && (
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
           <div className="w-12 h-12 border-4 border-[#D90452] border-t-transparent rounded-full animate-spin" />
-          <p className="font-black text-[#A0918B] text-sm">Mükəmməl hədiyyələr axtarılır...</p>
+          <p className="font-black text-[#A0918B] text-sm">Finding perfect gifts...</p>
         </div>
       )}
 
@@ -277,7 +277,7 @@ function GiftFinder() {
             <div className="bg-gradient-to-r from-[#FFF0F5] to-[#FDF8F6] rounded-2xl border border-[#F5D8E4] px-5 py-4 mb-6 flex items-start gap-3 anim-scale-in">
               <span className="text-xl flex-shrink-0">✨</span>
               <div>
-                <p className="text-[10px] font-black text-[#D90452] uppercase tracking-wider mb-1">Gifti tövsiyə edir</p>
+                <p className="text-[10px] font-black text-[#D90452] uppercase tracking-wider mb-1">Giftie's pick</p>
                 <p className="text-sm text-[#1E1B1B] leading-relaxed">{aiCard}</p>
               </div>
             </div>
@@ -297,13 +297,13 @@ function GiftFinder() {
           {products.length === 0 ? (
             <div className="bg-white rounded-2xl p-10 text-center border border-[#EFE4DF]">
               <div className="text-4xl mb-3">🔍</div>
-              <p className="font-black text-[#1E1B1B]">Uyğun hədiyyə tapılmadı</p>
-              <p className="text-sm text-[#A0918B] mt-1">Söhbətdə tərcihlərini dəyişməyə cəhd et</p>
+              <p className="font-black text-[#1E1B1B]">No matching gifts found</p>
+              <p className="text-sm text-[#A0918B] mt-1">Try refining your request in the chat</p>
             </div>
           ) : (
             <>
               <p className="text-[10px] font-black text-[#D90452] uppercase tracking-widest mb-4">
-                {products.length} hədiyyə tapıldı
+                {products.length} gift{products.length !== 1 ? "s" : ""} found
               </p>
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 anim-stagger">
                 {products.map((product) => (
@@ -317,10 +317,10 @@ function GiftFinder() {
                   to={"/gift-results?recipient=" + lastParams.recipient + "&occasion=" + lastParams.occasion + "&interest=" + lastParams.interest}
                   className="bg-[#D90452] text-white px-6 py-3 rounded-full font-black text-sm btn-press shadow-sm"
                 >
-                  Bütün nəticələrə bax →
+                  See Full Results →
                 </Link>
                 <Link to="/explore" className="bg-white border border-[#EFE4DF] text-[#1E1B1B] px-6 py-3 rounded-full font-black text-sm btn-press shadow-sm">
-                  Bütün hədiyyələrə bax
+                  Browse All Gifts
                 </Link>
               </div>
             </>

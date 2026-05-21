@@ -7,45 +7,38 @@ const INTERESTS  = ["Jewelry", "Personalized", "Home Decor", "Beauty", "Accessor
 
 const RECIPIENT_ALIASES = {
   girlfriend: "Partner", boyfriend: "Partner", husband: "Partner", wife: "Partner",
-  spouse: "Partner", fiancé: "Partner", fiance: "Partner", lover: "Partner",
-  sevgilim: "Partner", sevgilisi: "Partner", ər: "Partner", arvad: "Partner",
-  nişanlım: "Partner", nişanlı: "Partner",
-  mother: "Mom", mum: "Mom", mama: "Mom", anne: "Mom",
-  anam: "Mom", ana: "Mom", nənəm: "Mom", nənə: "Mom",
-  father: "Dad", papa: "Dad", baba: "Dad", atam: "Dad", ata: "Dad",
-  brother: "Friend", sister: "Friend", qardaş: "Friend", bacı: "Friend",
-  dost: "Friend", yoldaş: "Friend", rəfiqəm: "Friend", rəfiqim: "Friend",
-  colleague: "Coworker", boss: "Coworker", iş: "Coworker", həmkar: "Coworker",
-  child: "Kids", son: "Kids", daughter: "Kids", baby: "Kids",
-  uşaq: "Kids", oğlum: "Kids", qızım: "Kids",
+  spouse: "Partner", fiancée: "Partner", fiance: "Partner", fiancé: "Partner",
+  gf: "Partner", bf: "Partner", "significant other": "Partner",
+  mother: "Mom", mum: "Mom", mama: "Mom", mummy: "Mom",
+  father: "Dad", papa: "Dad", daddy: "Dad",
+  brother: "Friend", sister: "Friend", bestie: "Friend", bestfriend: "Friend",
+  colleague: "Coworker", boss: "Coworker", coworker: "Coworker", manager: "Coworker",
+  child: "Kids", son: "Kids", daughter: "Kids", baby: "Kids", toddler: "Kids", kid: "Kids",
 };
 
 const OCCASION_ALIASES = {
-  "valentines day": "Valentine", "valentine's day": "Valentine", valentines: "Valentine",
-  sevgililər: "Valentine", sevgililer: "Valentine",
-  "christmas day": "Christmas", xmas: "Christmas", milad: "Christmas",
+  "valentine's day": "Valentine", "valentines day": "Valentine", valentines: "Valentine",
+  "v-day": "Valentine", vday: "Valentine",
+  xmas: "Christmas", "christmas day": "Christmas",
   "baby shower": "Baby Shower", "housewarming party": "Housewarming",
-  "graduation day": "Graduation", grad: "Graduation", məzuniyyət: "Graduation",
-  "anniversary day": "Anniversary", "wedding day": "Wedding",
-  toy: "Wedding", nikah: "Wedding", ad: "Birthday", doğum: "Birthday",
-  doğumgünü: "Birthday", "ad günü": "Birthday", "ad gunu": "Birthday",
-  yubileyi: "Anniversary", ildönümü: "Anniversary",
+  grad: "Graduation", "graduation day": "Graduation",
+  "anniversary day": "Anniversary", "wedding day": "Wedding", marriage: "Wedding",
+  bday: "Birthday", "birth day": "Birthday", "born day": "Birthday",
 };
 
 const INTEREST_ALIASES = {
-  necklace: "Jewelry", ring: "Jewelry", bracelet: "Jewelry", earring: "Jewelry",
-  earrings: "Jewelry", gold: "Jewelry", silver: "Jewelry", zərgərlik: "Jewelry",
-  zinət: "Jewelry", boyunbağı: "Jewelry", üzük: "Jewelry", qolbaq: "Jewelry",
+  necklace: "Jewelry", ring: "Jewelry", bracelet: "Jewelry",
+  earrings: "Jewelry", earring: "Jewelry", gold: "Jewelry", silver: "Jewelry",
+  gems: "Jewelry", jewellery: "Jewelry", jewel: "Jewelry",
   perfume: "Beauty", lipstick: "Beauty", makeup: "Beauty", skincare: "Beauty",
-  ətir: "Beauty", gözəllik: "Beauty", kosmetika: "Beauty",
-  candle: "Home Decor", lamp: "Home Decor", decor: "Home Decor",
-  ev: "Home Decor", dekor: "Home Decor", şam: "Home Decor",
-  painting: "Art", drawing: "Art", rəsm: "Art", sənət: "Art",
-  chocolate: "Food", cake: "Food", şokolad: "Food", tort: "Food", yemək: "Food",
-  bag: "Accessories", wallet: "Accessories", çanta: "Accessories", cüzdan: "Accessories",
-  custom: "Personalized", fərdi: "Personalized", adlı: "Personalized",
-  organic: "Eco-Friendly", eco: "Eco-Friendly", təbii: "Eco-Friendly",
-  antique: "Vintage", vintage: "Vintage", köhnə: "Vintage",
+  cosmetics: "Beauty", fragrance: "Beauty",
+  candle: "Home Decor", lamp: "Home Decor", decor: "Home Decor", decoration: "Home Decor",
+  painting: "Art", drawing: "Art", artwork: "Art", craft: "Art",
+  chocolate: "Food", cake: "Food", sweets: "Food", snacks: "Food", coffee: "Food",
+  bag: "Accessories", wallet: "Accessories", scarf: "Accessories", hat: "Accessories",
+  custom: "Personalized", engraved: "Personalized", monogram: "Personalized",
+  organic: "Eco-Friendly", eco: "Eco-Friendly", sustainable: "Eco-Friendly", green: "Eco-Friendly",
+  antique: "Vintage", retro: "Vintage", classic: "Vintage",
 };
 
 function matchClosest(value, list, aliases) {
@@ -60,20 +53,27 @@ function matchClosest(value, list, aliases) {
   return partial || null;
 }
 
-const SYSTEM_PROMPT = `Sən GiftBoxy — əl işi hədiyyə mağazasının köməkçisi "Gifti"sən.
-İstifadəçi ilə AZƏRBAYCAN DİLİNDƏ danış. Qısa, mehriban cavab ver (2-3 cümlə). 1 emoji işlət.
+const SYSTEM_PROMPT = `You are Giftie, an expert gift advisor for GiftBoxy — a curated handmade gift marketplace. You are warm, sharp, and efficient.
 
-QAYDALAR:
-1. Recipient + Occasion bildikdə SEARCH bloku çıxar.
-2. Əgər istifadəçi yalnız kateqoriya/maraq (məs. "zərgərlik", "jewelry") yazarsa — recipient="Partner", occasion="Birthday" default götür və DƏRHAL SEARCH çıxar.
-3. YALNIZ bu dəyərləri istifadə et:
-   recipient: Mom | Dad | Partner | Friend | Kids | Coworker
-   occasion: Birthday | Wedding | Anniversary | Graduation | Valentine | Christmas | Housewarming | Baby Shower
-   interest: Jewelry | Personalized | Home Decor | Beauty | Accessories | Food | Art | Eco-Friendly | Vintage
-4. SEARCH bloku DƏQIQ belə olsun (başqa heç nə əlavə etmə):
+PERSONALITY: Think like a knowledgeable friend who "gets it" immediately. Make smart inferences. Don't ask for info you can figure out.
+
+SEARCH RULES:
+- Trigger SEARCH as soon as you can reasonably infer recipient + occasion. Max 1 follow-up question.
+- If user mentions only a category (e.g. "jewelry", "something for my mom"), trigger SEARCH immediately with smart defaults.
+- Infer interest from context: romantic → Jewelry/Personalized, cook → Food, creative → Art, etc.
+- Budget: parse "under $X", "around $X", "budget $X" → set maxBudget accordingly.
+
+VALID VALUES ONLY:
+recipient: Mom | Dad | Partner | Friend | Kids | Coworker
+occasion: Birthday | Wedding | Anniversary | Graduation | Valentine | Christmas | Housewarming | Baby Shower
+interest: Jewelry | Personalized | Home Decor | Beauty | Accessories | Food | Art | Eco-Friendly | Vintage
+
+OUTPUT FORMAT — append this on its own line at the end when ready:
 SEARCH:{"recipient":"Partner","occasion":"Birthday","interest":"Jewelry","minBudget":0,"maxBudget":99999}
-5. SEARCH-i markdown, kod bloku, dırnaq içinə alma.
-6. Budget: "50 dollar altı" → maxBudget:50. Yoxdursa → maxBudget:99999.`;
+
+CRITICAL: No markdown, no code blocks, no quotes around SEARCH. Exact format above only.
+
+RESPONSE STYLE: 2-3 sentences max. Warm and confident. 1 emoji. Show you understood their request.`;
 
 export const chatWithGroq = async (history, userMessage) => {
   if (!API_KEY) {
@@ -99,8 +99,8 @@ export const chatWithGroq = async (history, userMessage) => {
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages,
-      temperature: 0.3,
-      max_tokens: 350,
+      temperature: 0.5,
+      max_tokens: 300,
     }),
   });
 
