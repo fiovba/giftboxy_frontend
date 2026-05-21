@@ -1,60 +1,56 @@
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-const SYSTEM_PROMPT = `You are a warm, helpful gift recommendation assistant for GiftBoxy — a curated handmade gift marketplace.
+const SYSTEM_PROMPT = `You are a warm, enthusiastic gift recommendation assistant for GiftBoxy — a curated handmade gift marketplace. Your name is "Giftie".
 
-When a user describes who they're shopping for, do TWO things:
+Help users find the perfect gift through friendly conversation. Ask follow-up questions if needed.
 
-1. Write a short, warm, personalized message (2-3 sentences) explaining why the gifts will be perfect.
-2. Extract structured gift parameters.
+When you have enough info (recipient, occasion, optional: interest & budget), include a JSON block in your response.
 
 Available recipients: Mom, Dad, Partner, Friend, Kids, Coworker
 Available occasions: Birthday, Wedding, Anniversary, Graduation, Valentine, Christmas, Housewarming, Baby Shower
 Available interests: Jewelry, Personalized, Home Decor, Beauty, Accessories, Food, Art, Eco-Friendly, Vintage
 
-Respond in EXACTLY this format (no extra text):
-MESSAGE: [your personalized warm message here]
-JSON: {"recipient":"...","occasion":"...","interest":"...","minBudget":0,"maxBudget":100}
+If you have enough info to search, end your response with:
+SEARCH:{"recipient":"...","occasion":"...","interest":"...","minBudget":0,"maxBudget":99999}
 
-If budget is not mentioned, default to minBudget:0, maxBudget:99999.
-Always pick the closest match from the available options above.`;
+Keep responses short, warm, and conversational (2-4 sentences max). Use 1-2 emojis.
+Do NOT include the SEARCH block if you still need more info from the user.`;
 
-export const getGiftSuggestion = async (userMessage) => {
-  if (!API_KEY) throw new Error("VITE_GEMINI_API_KEY is not set.");
+export const chatWithGemini = async (history, userMessage) => {
+  if (!API_KEY) throw new Error("VITE_GEMINI_API_KEY is not set");
 
-  const response = await fetch(URL, {
+  const contents = [
+    { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
+    { role: "model", parts: [{ text: "Hi! I'm Giftie 🎁 I'm here to help you find the perfect gift! Who are you shopping for today?" }] },
+    ...history.map((m) => ({
+      role: m.role === "ai" ? "model" : "user",
+      parts: [{ text: m.text }],
+    })),
+    { role: "user", parts: [{ text: userMessage }] },
+  ];
+
+  const res = await fetch(URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            { text: SYSTEM_PROMPT + "\n\nUser: " + userMessage },
-          ],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 300,
-      },
+      contents,
+      generationConfig: { temperature: 0.8, maxOutputTokens: 400 },
     }),
   });
 
-  if (!response.ok) throw new Error("Gemini API error: " + response.status);
+  if (!res.ok) throw new Error("Gemini API error: " + res.status);
+  const data = await res.json();
+  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-  const messageMatch = text.match(/MESSAGE:\s*(.+?)(?=JSON:|$)/s);
-  const jsonMatch = text.match(/JSON:\s*(\{.+\})/s);
-
-  const message = messageMatch?.[1]?.trim() || "";
+  const searchMatch = raw.match(/SEARCH:(\{.+\})/);
   let params = null;
-  try {
-    params = jsonMatch ? JSON.parse(jsonMatch[1]) : null;
-  } catch {
-    params = null;
+  let text = raw;
+
+  if (searchMatch) {
+    try { params = JSON.parse(searchMatch[1]); } catch { params = null; }
+    text = raw.replace(/SEARCH:\{.+\}/, "").trim();
   }
 
-  return { message, params };
+  return { text, params };
 };
