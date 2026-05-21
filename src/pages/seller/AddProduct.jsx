@@ -199,13 +199,7 @@ function AddProduct() {
       let productId = id;
 
       if (isEditMode) {
-        // Send remaining image URLs so backend can drop removed ones if it supports it
-        const remainingUrls = existingImages.map((i) => i.url);
-        await sellerService.updateProduct(id, {
-          ...form,
-          images: remainingUrls,
-          imageUrls: remainingUrls,
-        });
+        await sellerService.updateProduct(id, form);
         toast.success("Product updated successfully.");
       } else {
         const res = await sellerService.addProduct({ ...form, sellerId });
