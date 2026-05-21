@@ -5,56 +5,75 @@ const RECIPIENTS = ["Mom", "Dad", "Partner", "Friend", "Kids", "Coworker"];
 const OCCASIONS  = ["Birthday", "Wedding", "Anniversary", "Graduation", "Valentine", "Christmas", "Housewarming", "Baby Shower"];
 const INTERESTS  = ["Jewelry", "Personalized", "Home Decor", "Beauty", "Accessories", "Food", "Art", "Eco-Friendly", "Vintage"];
 
-// Map user-friendly words to canonical values
 const RECIPIENT_ALIASES = {
   girlfriend: "Partner", boyfriend: "Partner", husband: "Partner", wife: "Partner",
   spouse: "Partner", fiancé: "Partner", fiance: "Partner", lover: "Partner",
+  sevgilim: "Partner", sevgilisi: "Partner", ər: "Partner", arvad: "Partner",
+  nişanlım: "Partner", nişanlı: "Partner",
   mother: "Mom", mum: "Mom", mama: "Mom", anne: "Mom",
-  father: "Dad", papa: "Dad", baba: "Dad",
-  brother: "Friend", sister: "Friend", colleague: "Coworker", boss: "Coworker",
+  anam: "Mom", ana: "Mom", nənəm: "Mom", nənə: "Mom",
+  father: "Dad", papa: "Dad", baba: "Dad", atam: "Dad", ata: "Dad",
+  brother: "Friend", sister: "Friend", qardaş: "Friend", bacı: "Friend",
+  dost: "Friend", yoldaş: "Friend", rəfiqəm: "Friend", rəfiqim: "Friend",
+  colleague: "Coworker", boss: "Coworker", iş: "Coworker", həmkar: "Coworker",
   child: "Kids", son: "Kids", daughter: "Kids", baby: "Kids",
+  uşaq: "Kids", oğlum: "Kids", qızım: "Kids",
 };
+
 const OCCASION_ALIASES = {
-  "valentines day": "Valentine", "valentine's day": "Valentine", "valentines": "Valentine",
-  "christmas day": "Christmas", "xmas": "Christmas",
+  "valentines day": "Valentine", "valentine's day": "Valentine", valentines: "Valentine",
+  sevgililər: "Valentine", sevgililer: "Valentine",
+  "christmas day": "Christmas", xmas: "Christmas", milad: "Christmas",
   "baby shower": "Baby Shower", "housewarming party": "Housewarming",
-  "graduation day": "Graduation", "grad": "Graduation",
+  "graduation day": "Graduation", grad: "Graduation", məzuniyyət: "Graduation",
   "anniversary day": "Anniversary", "wedding day": "Wedding",
+  toy: "Wedding", nikah: "Wedding", ad: "Birthday", doğum: "Birthday",
+  doğumgünü: "Birthday", "ad günü": "Birthday", "ad gunu": "Birthday",
+  yubileyi: "Anniversary", ildönümü: "Anniversary",
+};
+
+const INTEREST_ALIASES = {
+  necklace: "Jewelry", ring: "Jewelry", bracelet: "Jewelry", earring: "Jewelry",
+  earrings: "Jewelry", gold: "Jewelry", silver: "Jewelry", zərgərlik: "Jewelry",
+  zinət: "Jewelry", boyunbağı: "Jewelry", üzük: "Jewelry", qolbaq: "Jewelry",
+  perfume: "Beauty", lipstick: "Beauty", makeup: "Beauty", skincare: "Beauty",
+  ətir: "Beauty", gözəllik: "Beauty", kosmetika: "Beauty",
+  candle: "Home Decor", lamp: "Home Decor", decor: "Home Decor",
+  ev: "Home Decor", dekor: "Home Decor", şam: "Home Decor",
+  painting: "Art", drawing: "Art", rəsm: "Art", sənət: "Art",
+  chocolate: "Food", cake: "Food", şokolad: "Food", tort: "Food", yemək: "Food",
+  bag: "Accessories", wallet: "Accessories", çanta: "Accessories", cüzdan: "Accessories",
+  custom: "Personalized", fərdi: "Personalized", adlı: "Personalized",
+  organic: "Eco-Friendly", eco: "Eco-Friendly", təbii: "Eco-Friendly",
+  antique: "Vintage", vintage: "Vintage", köhnə: "Vintage",
 };
 
 function matchClosest(value, list, aliases) {
   if (!value) return null;
   const v = value.trim().toLowerCase();
-
-  // alias lookup first
   if (aliases?.[v]) return aliases[v];
-
-  // exact case-insensitive
   const exact = list.find((i) => i.toLowerCase() === v);
   if (exact) return exact;
-
-  // list item contains value or value contains list item
   const partial = list.find(
     (i) => i.toLowerCase().includes(v) || v.includes(i.toLowerCase())
   );
-  return partial || list[0]; // fallback to first valid option
+  return partial || null;
 }
 
-const SYSTEM_PROMPT = `You are Giftie, a gift assistant for GiftBoxy — a handmade gift marketplace.
+const SYSTEM_PROMPT = `Sən GiftBoxy — əl işi hədiyyə mağazasının köməkçisi "Gifti"sən.
+İstifadəçi ilə AZƏRBAYCAN DİLİNDƏ danış. Qısa, mehriban cavab ver (2-3 cümlə). 1 emoji işlət.
 
-Your job: ask friendly questions to gather recipient, occasion, and optionally interest and budget. Keep replies SHORT (2-3 sentences max) and warm. Use 1 emoji.
-
-STRICT RULES:
-1. Once you know recipient + occasion, output a SEARCH block.
-2. Use ONLY these exact values — do not invent others:
+QAYDALAR:
+1. Recipient + Occasion bildikdə SEARCH bloku çıxar.
+2. Əgər istifadəçi yalnız kateqoriya/maraq (məs. "zərgərlik", "jewelry") yazarsa — recipient="Partner", occasion="Birthday" default götür və DƏRHAL SEARCH çıxar.
+3. YALNIZ bu dəyərləri istifadə et:
    recipient: Mom | Dad | Partner | Friend | Kids | Coworker
    occasion: Birthday | Wedding | Anniversary | Graduation | Valentine | Christmas | Housewarming | Baby Shower
    interest: Jewelry | Personalized | Home Decor | Beauty | Accessories | Food | Art | Eco-Friendly | Vintage
-3. End your message with this EXACT format on its own line (no extra spaces):
-SEARCH:{"recipient":"Mom","occasion":"Birthday","interest":"Jewelry","minBudget":0,"maxBudget":99999}
-4. Do NOT wrap SEARCH in markdown, code blocks, or quotes.
-5. Pick the closest matching interest if not specified (default: Jewelry).
-6. For budget: if user says "under $50" use maxBudget:50. If no budget, use maxBudget:99999.`;
+4. SEARCH bloku DƏQIQ belə olsun (başqa heç nə əlavə etmə):
+SEARCH:{"recipient":"Partner","occasion":"Birthday","interest":"Jewelry","minBudget":0,"maxBudget":99999}
+5. SEARCH-i markdown, kod bloku, dırnaq içinə alma.
+6. Budget: "50 dollar altı" → maxBudget:50. Yoxdursa → maxBudget:99999.`;
 
 export const chatWithGroq = async (history, userMessage) => {
   if (!API_KEY) {
@@ -93,9 +112,8 @@ export const chatWithGroq = async (history, userMessage) => {
 
   const data = await res.json();
   const raw = data.choices?.[0]?.message?.content || "";
-  console.log("[groqService] raw response:", raw);
+  console.log("[groqService] raw:", raw);
 
-  // Match SEARCH block — handle optional whitespace, newlines, code fences
   const searchMatch = raw.match(/SEARCH:\s*(\{[\s\S]*?\})/);
   let params = null;
   let text = raw.replace(/SEARCH:\s*\{[\s\S]*?\}/, "").replace(/```[\s\S]*?```/g, "").trim();
@@ -103,18 +121,16 @@ export const chatWithGroq = async (history, userMessage) => {
   if (searchMatch) {
     try {
       const parsed = JSON.parse(searchMatch[1]);
-      // Normalize all values to match exactly what the backend expects
       params = {
-        recipient: matchClosest(parsed.recipient, RECIPIENTS, RECIPIENT_ALIASES),
-        occasion:  matchClosest(parsed.occasion,  OCCASIONS,  OCCASION_ALIASES),
-        interest:  matchClosest(parsed.interest,  INTERESTS,  null),
+        recipient: matchClosest(parsed.recipient, RECIPIENTS, RECIPIENT_ALIASES) || "Partner",
+        occasion:  matchClosest(parsed.occasion,  OCCASIONS,  OCCASION_ALIASES)  || "Birthday",
+        interest:  matchClosest(parsed.interest,  INTERESTS,  INTEREST_ALIASES)  || "Jewelry",
         minBudget: Number(parsed.minBudget ?? 0),
         maxBudget: Number(parsed.maxBudget ?? 99999),
       };
-      console.log("[groqService] extracted params:", params);
+      console.log("[groqService] params:", params);
     } catch (e) {
-      console.warn("[groqService] failed to parse SEARCH JSON:", searchMatch[1], e);
-      params = null;
+      console.warn("[groqService] parse error:", e);
     }
   }
 
