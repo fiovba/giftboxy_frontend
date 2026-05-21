@@ -77,6 +77,7 @@ function ExploreProductCard({ product }) {
   };
 
   return (
+    <>
     <div className="bg-white rounded-[26px] overflow-hidden shadow-sm border border-[#EEE4DF] card-lift anim-fade-up">
       <div className="relative">
         <Link to={`/product/${product.slug}`}>
@@ -165,6 +166,7 @@ function ExploreProductCard({ product }) {
       trigger={authModal || "cart"}
       onClose={() => setAuthModal(null)}
     />
+    </>
   );
 }
 
