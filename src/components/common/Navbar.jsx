@@ -191,10 +191,6 @@ function Navbar() {
             <div className="mt-5 grid grid-cols-2 gap-3">
               <MobileLink to="/explore" onClick={closeMobile}>Gifts</MobileLink>
               <MobileLink to="/gift-finder" onClick={closeMobile}>Gift Finder</MobileLink>
-              <MobileLink to="/explore?category=for-her" onClick={closeMobile}>Gifts for Mom</MobileLink>
-              <MobileLink to="/explore?category=home" onClick={closeMobile}>Home Favorites</MobileLink>
-              <MobileLink to="/explore?category=fashion" onClick={closeMobile}>Fashion Finds</MobileLink>
-              <MobileLink to="/explore?category=vintage" onClick={closeMobile}>Vintage</MobileLink>
               <MobileLink to="/about" onClick={closeMobile}>About</MobileLink>
 
               {isAuthenticated && (
@@ -269,10 +265,6 @@ function DesktopLinks() {
     <>
       <Link to="/explore">Gifts</Link>
       <Link to="/gift-finder">Gift Finder</Link>
-      <Link to="/explore?category=for-her">Gifts for Mom</Link>
-      <Link to="/explore?category=home">Home Favorites</Link>
-      <Link to="/explore?category=fashion">Fashion Finds</Link>
-      <Link to="/explore?category=vintage">Vintage</Link>
       <Link to="/about">About</Link>
     </>
   );
