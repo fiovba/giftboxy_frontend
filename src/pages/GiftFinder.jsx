@@ -362,45 +362,21 @@ function GiftFinder() {
     </div>
   );
 
-  /* ─────────────────── PRODUCTS PANEL ─────────────────── */
-  const productsPanel = (
-    <div className="flex-1 flex flex-col rounded-[28px] bg-white/70 border border-[#F5E0E8] shadow-[0_8px_40px_rgba(217,4,82,0.05)] overflow-hidden lg:h-full">
-      {!lastParams && !productsLoading && (
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center py-16">
-          <div className="relative mb-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-[#FF6B9E] to-[#D90452] rounded-[28px] flex items-center justify-center text-5xl shadow-lg anim-float">
-              🎁
-            </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center text-sm shadow">
-              ✨
-            </div>
-          </div>
-          <h2 className="text-2xl font-black text-[#1E1B1B]">Gift ideas appear here</h2>
-          <p className="mt-2 text-[#A0918B] max-w-xs text-sm leading-relaxed">
-            Chat with Giftie and I'll curate personalized gift recommendations just for you.
-          </p>
-          <div className="mt-8 grid grid-cols-2 gap-3 max-w-[280px] w-full">
-            {["Jewelry 💍", "Home Decor 🏡", "Beauty ✨", "Personalized 🖊️"].map((tag) => (
-              <div key={tag} className="bg-white rounded-2xl border border-[#EFE4DF] px-4 py-3 text-xs font-bold text-[#A0918B] text-center shadow-sm">
-                {tag}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
+  /* ─────────────────── PRODUCTS CONTENT (shared) ─────────────────── */
+  const productsContent = (
+    <>
       {productsLoading && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <div className="flex flex-col items-center justify-center gap-4 py-16">
           <div className="w-12 h-12 border-4 border-[#D90452] border-t-transparent rounded-full animate-spin" />
           <p className="font-black text-[#A0918B] text-sm">Finding perfect gifts...</p>
         </div>
       )}
 
       {!productsLoading && lastParams && (
-        <div className="flex-1 overflow-y-auto overscroll-contain p-6" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="p-4 sm:p-6">
           {aiCard && (
-            <div className="bg-gradient-to-r from-[#FFF0F5] to-[#FDF8F6] rounded-2xl border border-[#F5D8E4] px-5 py-4 mb-6 flex items-start gap-3 anim-scale-in">
-              <span className="text-xl flex-shrink-0">✨</span>
+            <div className="bg-gradient-to-r from-[#FFF0F5] to-[#FDF8F6] rounded-2xl border border-[#F5D8E4] px-4 py-3 mb-5 flex items-start gap-3 anim-scale-in">
+              <span className="text-lg flex-shrink-0">✨</span>
               <div>
                 <p className="text-[10px] font-black text-[#D90452] uppercase tracking-wider mb-1">Giftie's pick</p>
                 <p className="text-sm text-[#1E1B1B] leading-relaxed">{aiCard}</p>
@@ -413,7 +389,7 @@ function GiftFinder() {
               lastParams.maxBudget < 99999 ? "Under $" + lastParams.maxBudget : null]
               .filter(Boolean)
               .map((tag) => (
-                <span key={tag} className="bg-white border border-[#EFE4DF] text-[#5A4848] text-xs font-bold px-4 py-1.5 rounded-full shadow-sm">
+                <span key={tag} className="bg-white border border-[#EFE4DF] text-[#5A4848] text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
                   {tag}
                 </span>
               ))}
@@ -424,20 +400,13 @@ function GiftFinder() {
               <div className="text-4xl mb-3">🎁</div>
               <p className="font-black text-[#1E1B1B] text-lg">No exact matches found</p>
               <p className="text-sm text-[#A0918B] mt-2 max-w-xs mx-auto leading-relaxed">
-                Our backend is warming up or no products match this combination.
-                Browse our full collection below — you'll find plenty of great options!
+                Our server is warming up or no products match this combination yet. Browse below!
               </p>
               <div className="mt-5 flex gap-3 justify-center flex-wrap">
-                <Link
-                  to={"/explore?category=" + (lastParams?.interest || "")}
-                  className="bg-[#D90452] text-white px-5 py-2.5 rounded-full font-black text-sm btn-press"
-                >
+                <Link to={"/explore?category=" + (lastParams?.interest || "")} className="bg-[#D90452] text-white px-5 py-2.5 rounded-full font-black text-sm btn-press">
                   Browse {lastParams?.interest || "Gifts"} →
                 </Link>
-                <Link
-                  to="/explore"
-                  className="bg-[#F8F1EC] text-[#1E1B1B] px-5 py-2.5 rounded-full font-black text-sm btn-press"
-                >
+                <Link to="/explore" className="bg-[#F8F1EC] text-[#1E1B1B] px-5 py-2.5 rounded-full font-black text-sm btn-press">
                   All Gifts
                 </Link>
               </div>
@@ -447,8 +416,7 @@ function GiftFinder() {
               <p className="text-[10px] font-black text-[#D90452] uppercase tracking-widest mb-4">
                 {products.length} gift{products.length !== 1 ? "s" : ""} found
               </p>
-              {/* Primary results */}
-              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 anim-stagger">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {products.map((product) => (
                   <div key={product.id} className="anim-fade-up">
                     <ExploreProductCard product={product} />
@@ -456,16 +424,12 @@ function GiftFinder() {
                 ))}
               </div>
 
-              {/* Related / "You might also like" — only when not strict */}
               {relatedProducts.length > 0 && (
                 <div className="mt-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-sm">✨</span>
-                    <p className="text-[10px] font-black text-[#A0918B] uppercase tracking-widest">
-                      You might also like
-                    </p>
-                  </div>
-                  <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 anim-stagger">
+                  <p className="text-[10px] font-black text-[#A0918B] uppercase tracking-widest mb-4">
+                    ✨ You might also like
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {relatedProducts.map((product) => (
                       <div key={product.id} className="anim-fade-up opacity-90">
                         <ExploreProductCard product={product} />
@@ -490,16 +454,19 @@ function GiftFinder() {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 
   return (
     <div className="bg-gradient-to-br from-[#FDF5F0] via-[#FFF8F5] to-[#FCE8EF]">
+
       {/* ── MOBILE: single column, natural scroll ── */}
-      <div className="lg:hidden flex flex-col gap-4 p-4 pb-8">
+      <div className="lg:hidden flex flex-col gap-4 p-4 pb-10">
         {chatPanel}
         {(lastParams || productsLoading) && (
-          <div className="min-h-[400px]">{productsPanel}</div>
+          <div className="w-full rounded-[28px] bg-white/80 border border-[#F5E0E8] shadow-[0_4px_20px_rgba(217,4,82,0.06)]">
+            {productsContent}
+          </div>
         )}
       </div>
 
@@ -509,7 +476,35 @@ function GiftFinder() {
         style={{ height: "calc(100dvh - " + navbarH + "px)" }}
       >
         {chatPanel}
-        {productsPanel}
+        {/* Desktop products panel — scrollable inside fixed height */}
+        <div className="flex-1 flex flex-col rounded-[28px] bg-white/70 border border-[#F5E0E8] shadow-[0_8px_40px_rgba(217,4,82,0.05)] overflow-hidden">
+          {!lastParams && !productsLoading && (
+            <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-[#FF6B9E] to-[#D90452] rounded-[28px] flex items-center justify-center text-5xl shadow-lg anim-float">
+                  🎁
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center text-sm shadow">
+                  ✨
+                </div>
+              </div>
+              <h2 className="text-2xl font-black text-[#1E1B1B]">Gift ideas appear here</h2>
+              <p className="mt-2 text-[#A0918B] max-w-xs text-sm leading-relaxed">
+                Chat with Giftie and I'll curate personalized gift recommendations just for you.
+              </p>
+              <div className="mt-8 grid grid-cols-2 gap-3 max-w-[280px] w-full">
+                {["Jewelry 💍", "Home Decor 🏡", "Beauty ✨", "Personalized 🖊️"].map((tag) => (
+                  <div key={tag} className="bg-white rounded-2xl border border-[#EFE4DF] px-4 py-3 text-xs font-bold text-[#A0918B] text-center shadow-sm">
+                    {tag}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
+            {productsContent}
+          </div>
+        </div>
       </div>
     </div>
   );
