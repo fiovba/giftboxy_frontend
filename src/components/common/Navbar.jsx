@@ -190,7 +190,7 @@ function Navbar() {
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <MobileLink to="/explore" onClick={closeMobile}>Gifts</MobileLink>
-              <MobileLink to="/gift-finder" onClick={closeMobile}>Gift Finder</MobileLink>
+              <MobileLink to="/gift-finder" onClick={closeMobile}>Giftie AI ✨</MobileLink>
               <MobileLink to="/about" onClick={closeMobile}>About</MobileLink>
 
               {isAuthenticated && (
@@ -264,7 +264,7 @@ function DesktopLinks() {
   return (
     <>
       <Link to="/explore">Gifts</Link>
-      <Link to="/gift-finder">Gift Finder</Link>
+      <Link to="/gift-finder">Giftie AI ✨</Link>
       <Link to="/about">About</Link>
     </>
   );

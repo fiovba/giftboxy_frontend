@@ -72,48 +72,67 @@ function GiftFinder() {
     return score;
   };
 
-  const fetchAllFromApi = async (interest, base) => {
-    // Try 1: full filter
-    let list = normalizeProductList((await giftFinder(base)).data);
+  const safeGiftFinder = async (params) => {
+    try {
+      const res = await giftFinder(params);
+      return normalizeProductList(res.data);
+    } catch {
+      return [];
+    }
+  };
 
-    // Try 2: no budget constraint
+  const fetchAllFromApi = async (interest, base) => {
+    // Level 1: full params
+    let list = await safeGiftFinder(base);
+
+    // Level 2: no budget
     if (list.length === 0 && (base.minBudget > 0 || base.maxBudget < 99999)) {
-      list = normalizeProductList((await giftFinder({ ...base, minBudget: 0, maxBudget: 99999 })).data);
+      list = await safeGiftFinder({ ...base, minBudget: 0, maxBudget: 99999 });
     }
 
-    // Try 3: relax recipient/occasion with different combos
+    // Level 3: relax recipient/occasion (5 combos, same interest)
     if (list.length === 0) {
-      const combos = [
-        { recipient: "Partner", occasion: "Birthday" },
-        { recipient: "Mom",     occasion: "Birthday" },
-        { recipient: "Friend",  occasion: "Birthday" },
-        { recipient: "Partner", occasion: "Valentine" },
+      for (const combo of [
+        { recipient: "Partner", occasion: "Birthday"    },
+        { recipient: "Mom",     occasion: "Birthday"    },
+        { recipient: "Friend",  occasion: "Birthday"    },
+        { recipient: "Partner", occasion: "Valentine"   },
         { recipient: "Partner", occasion: "Anniversary" },
-      ];
-      for (const combo of combos) {
-        list = normalizeProductList((await giftFinder({ ...combo, interest, minBudget: 0, maxBudget: 99999 })).data);
+      ]) {
+        list = await safeGiftFinder({ ...combo, interest, minBudget: 0, maxBudget: 99999 });
         if (list.length > 0) break;
       }
     }
 
-    // Try 4 (nuclear): all products, client-side multi-keyword filter
+    // Level 4 (nuclear): load ALL products, filter client-side by expanded keyword list
+    // Each level above is wrapped in safeGiftFinder so a sleeping/failing backend
+    // won't prevent this level from running.
     if (list.length === 0) {
-      const allRes = await getProducts();
-      const allRaw = allRes.data?.data || allRes.data?.items || allRes.data?.products || allRes.data || [];
-      // Use expanded keyword list so "Home Decor" matches candle/blanket/mug etc.
-      const kwList = INTEREST_KEYWORDS[interest] || [interest.toLowerCase()];
-      list = (Array.isArray(allRaw) ? allRaw : [])
-        .filter((p) => {
-          const haystack = [
-            p.categoryName, p.categorySlug, p.category,
-            p.title, p.name, p.description,
-            ...(Array.isArray(p.tags) ? p.tags : []),
-          ].join(" ").toLowerCase();
-          return kwList.some((kw) => haystack.includes(kw));
-        })
-        .map(normalizeProduct);
-      console.log("[fetchProducts] nuclear hit:", list.length, "keywords:", kwList);
+      try {
+        const allRes = await getProducts();
+        const allRaw =
+          (Array.isArray(allRes.data)           ? allRes.data           : null) ||
+          (Array.isArray(allRes.data?.data)     ? allRes.data.data      : null) ||
+          (Array.isArray(allRes.data?.items)    ? allRes.data.items     : null) ||
+          (Array.isArray(allRes.data?.products) ? allRes.data.products  : null) ||
+          [];
+        const kwList = INTEREST_KEYWORDS[interest] || [interest.toLowerCase()];
+        list = allRaw
+          .filter((p) => {
+            const haystack = [
+              p.categoryName, p.categorySlug, p.category,
+              p.title, p.name, p.description,
+              ...(Array.isArray(p.tags) ? p.tags : []),
+            ].filter(Boolean).join(" ").toLowerCase();
+            return kwList.some((kw) => haystack.includes(kw));
+          })
+          .map(normalizeProduct);
+        console.log("[nuclear] found:", list.length, "for keywords:", kwList);
+      } catch (e) {
+        console.error("[nuclear] getProducts failed:", e.message);
+      }
     }
+
     return list;
   };
 
@@ -395,10 +414,27 @@ function GiftFinder() {
           </div>
 
           {products.length === 0 ? (
-            <div className="bg-white rounded-2xl p-10 text-center border border-[#EFE4DF]">
-              <div className="text-4xl mb-3">🔍</div>
-              <p className="font-black text-[#1E1B1B]">No matching gifts found</p>
-              <p className="text-sm text-[#A0918B] mt-1">Try refining your request in the chat</p>
+            <div className="bg-white rounded-2xl p-8 text-center border border-[#EFE4DF]">
+              <div className="text-4xl mb-3">🎁</div>
+              <p className="font-black text-[#1E1B1B] text-lg">No exact matches found</p>
+              <p className="text-sm text-[#A0918B] mt-2 max-w-xs mx-auto leading-relaxed">
+                Our backend is warming up or no products match this combination.
+                Browse our full collection below — you'll find plenty of great options!
+              </p>
+              <div className="mt-5 flex gap-3 justify-center flex-wrap">
+                <Link
+                  to={"/explore?category=" + (lastParams?.interest || "")}
+                  className="bg-[#D90452] text-white px-5 py-2.5 rounded-full font-black text-sm btn-press"
+                >
+                  Browse {lastParams?.interest || "Gifts"} →
+                </Link>
+                <Link
+                  to="/explore"
+                  className="bg-[#F8F1EC] text-[#1E1B1B] px-5 py-2.5 rounded-full font-black text-sm btn-press"
+                >
+                  All Gifts
+                </Link>
+              </div>
             </div>
           ) : (
             <>
