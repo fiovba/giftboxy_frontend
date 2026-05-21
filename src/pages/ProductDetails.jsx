@@ -19,7 +19,7 @@ function ProductDetails() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const { isAuthenticated, isBuyer, user } = useAuth();
+  const { isAuthenticated, isBuyer, isSeller, user } = useAuth();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -157,8 +157,8 @@ function ProductDetails() {
   };
 
 const handleMessageSeller = () => {
-  if (!isAuthenticated) { toast.error("Login required."); return; }
-  if (!isBuyer) { toast.error("Sellers cannot message sellers."); return; }
+  if (!isAuthenticated) { toast.error("Please sign in to message sellers."); return; }
+  if (isSeller) { toast.error("Sellers cannot message other sellers."); return; }
   const sellerId = product.sellerUserId || product.sellerId || product.seller?.id;
   if (sellerId) {
     navigate(`/chat?sellerId=${sellerId}`);
