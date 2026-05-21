@@ -78,8 +78,7 @@ function SellerCoupons() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this coupon?")) return;
+  const performDelete = async (id) => {
     try {
       await couponService.deleteCoupon(id);
       setCoupons((prev) => prev.filter((c) => c.id !== id));
@@ -87,6 +86,29 @@ function SellerCoupons() {
     } catch {
       toast.error("Failed to delete coupon.");
     }
+  };
+
+  const handleDelete = (id) => {
+    toast.custom(
+      (t) => (
+        <div className="bg-white rounded-[20px] shadow-xl border border-[#EFE4DF] px-5 py-4 flex items-center gap-4">
+          <p className="text-sm font-bold text-[#1E1B1B] flex-1">Delete this coupon?</p>
+          <button
+            onClick={() => { toast.dismiss(t.id); performDelete(id); }}
+            className="bg-[#D90452] text-white px-4 py-2 rounded-full text-xs font-black"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="bg-[#F8F1EC] text-[#7A7272] px-4 py-2 rounded-full text-xs font-black"
+          >
+            Cancel
+          </button>
+        </div>
+      ),
+      { duration: 6000 }
+    );
   };
 
   return (
