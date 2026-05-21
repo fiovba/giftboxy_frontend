@@ -1,9 +1,8 @@
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import { GoHeartFill } from "react-icons/go";
 import { Link } from "react-router-dom";
-
-import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
