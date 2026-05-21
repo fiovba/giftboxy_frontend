@@ -159,26 +159,32 @@ function GiftFinder() {
           .map((p) => ({ ...p, _score: scoreProduct(p, keywords, interest) }))
           .sort((a, b) => b._score - a._score);
       }
+      // Set primary products immediately — nothing below should overwrite this
       setProducts(primary);
 
-      // Related products — only if not strict and user is open to suggestions
+      // Related products — isolated in its own try so it never clears primary products
       if (!strict && related.length > 0) {
-        const seenIds = new Set(primary.map((p) => p.id));
-        const relLists = await Promise.all(
-          related.slice(0, 2).map((rel) =>
-            fetchAllFromApi(rel, { ...base, interest: rel }).catch(() => [])
-          )
-        );
-        const relFlat = relLists
-          .flat()
-          .filter((p) => !seenIds.has(p.id))
-          .map((p) => ({ ...p, _score: scoreProduct(p, keywords, rel => rel) }))
-          .sort((a, b) => b._score - a._score)
-          .slice(0, 6);
-        setRelatedProducts(relFlat);
+        try {
+          const seenIds = new Set(primary.map((p) => p.id));
+          const relLists = await Promise.all(
+            related.slice(0, 2).map((rel) =>
+              fetchAllFromApi(rel, { ...base, interest: rel }).catch(() => [])
+            )
+          );
+          const relFlat = relLists
+            .flat()
+            .filter((p) => !seenIds.has(p.id))
+            .map((p) => ({ ...p, _score: scoreProduct(p, keywords, interest) }))
+            .sort((a, b) => b._score - a._score)
+            .slice(0, 6);
+          setRelatedProducts(relFlat);
+        } catch (e) {
+          console.warn("[fetchProducts] related products failed (non-critical):", e.message);
+        }
       }
     } catch (e) {
       console.error("[fetchProducts] error:", e);
+      // Only clear products if primary fetch itself failed
       setProducts([]);
     } finally {
       setProductsLoading(false);
