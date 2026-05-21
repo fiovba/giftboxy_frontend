@@ -354,10 +354,14 @@ function Chat() {
                 </div>
               ) : (
                 messages.map((msg, idx) => {
+                  const uid = user?.id;
                   const isMine =
                     msg.isOwn === true ||
-                    msg.senderId === user?.id ||
-                    (user?.email && msg.senderEmail === user.email);
+                    (uid != null && msg.senderId != null && String(msg.senderId) === String(uid)) ||
+                    (uid != null && msg.userId != null && String(msg.userId) === String(uid)) ||
+                    (uid != null && msg.buyerId != null && String(msg.buyerId) === String(uid)) ||
+                    (user?.email && msg.senderEmail && msg.senderEmail === user.email) ||
+                    (user?.email && msg.senderName && msg.senderName === user.email);
 
                   return (
                     <div
