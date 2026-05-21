@@ -48,6 +48,10 @@ const buildFormData = (data) => {
   );
 
   if (data.imageUrl) formData.append("Images", data.imageUrl);
+  // For edit mode: send remaining existing image URLs so backend can drop removed ones
+  if (Array.isArray(data.remainingImageUrls)) {
+    data.remainingImageUrls.forEach((url) => formData.append("ExistingImageUrls", url));
+  }
 
   return formData;
 };

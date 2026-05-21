@@ -23,19 +23,12 @@ export const sellerService = {
   },
 
   getProductById: async (productId) => {
-    try {
-      // Direct endpoint — likely returns full image objects with numeric IDs
-      const res = await api.get(`/products/${productId}`);
-      return res.data;
-    } catch {
-      // Fallback to list
-      const res = await api.get("/products/my-products");
-      const data = res.data;
-      const list = Array.isArray(data) ? data
-        : Array.isArray(data?.items) ? data.items
-        : Array.isArray(data?.data) ? data.data : [];
-      return list.find((p) => String(p.id) === String(productId)) || null;
-    }
+    const res = await api.get("/products/my-products");
+    const data = res.data;
+    const list = Array.isArray(data) ? data
+      : Array.isArray(data?.items) ? data.items
+      : Array.isArray(data?.data) ? data.data : [];
+    return list.find((p) => String(p.id) === String(productId)) || null;
   },
 
   addProduct: async (product) => {

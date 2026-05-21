@@ -198,7 +198,8 @@ function AddProduct() {
       let productId = id;
 
       if (isEditMode) {
-        await sellerService.updateProduct(id, form);
+        const remainingImageUrls = existingImages.map((i) => i.url);
+        await sellerService.updateProduct(id, { ...form, remainingImageUrls });
         toast.success("Product updated successfully.");
       } else {
         const res = await sellerService.addProduct({ ...form, sellerId });
