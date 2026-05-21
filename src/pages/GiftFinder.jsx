@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiSend, FiRefreshCw, FiZap } from "react-icons/fi";
 import { chatWithGroq } from "../services/groqService";
-import { giftFinder } from "../services/productService";
-import { normalizeProductList } from "../utils/productUtils";
+import { giftFinder, getProducts } from "../services/productService";
+import { normalizeProductList, normalizeProduct } from "../utils/productUtils";
 import ExploreProductCard from "../components/explore/ExploreProductCard";
 
 const INITIAL_MESSAGE = {
@@ -43,31 +43,64 @@ function GiftFinder() {
   const fetchProducts = async (params) => {
     setProductsLoading(true);
     try {
+      const interest = params.interest || "Jewelry";
       const base = {
         recipient: params.recipient || "Partner",
         occasion: params.occasion || "Birthday",
-        interest: params.interest || "Jewelry",
+        interest,
         minBudget: params.minBudget ?? 0,
         maxBudget: params.maxBudget ?? 99999,
       };
 
-      let res = await giftFinder(base);
-      let list = normalizeProductList(res.data);
+      // Try 1: full filter
+      let list = normalizeProductList((await giftFinder(base)).data);
+      console.log("[fetchProducts] try1:", list.length, base);
 
-      // Fallback 1: remove budget filter
+      // Try 2: remove budget
       if (list.length === 0 && (base.minBudget > 0 || base.maxBudget < 99999)) {
-        res = await giftFinder({ ...base, minBudget: 0, maxBudget: 99999 });
-        list = normalizeProductList(res.data);
+        list = normalizeProductList((await giftFinder({ ...base, minBudget: 0, maxBudget: 99999 })).data);
+        console.log("[fetchProducts] try2 (no budget):", list.length);
       }
 
-      // Fallback 2: only interest filter (ignore recipient/occasion)
+      // Try 3: different recipient/occasion combos with same interest
       if (list.length === 0) {
-        res = await giftFinder({ recipient: "Partner", occasion: "Birthday", interest: base.interest, minBudget: 0, maxBudget: 99999 });
-        list = normalizeProductList(res.data);
+        const combos = [
+          { recipient: "Partner", occasion: "Birthday" },
+          { recipient: "Mom",     occasion: "Birthday" },
+          { recipient: "Friend",  occasion: "Birthday" },
+          { recipient: "Partner", occasion: "Valentine" },
+          { recipient: "Partner", occasion: "Anniversary" },
+        ];
+        for (const combo of combos) {
+          list = normalizeProductList((await giftFinder({ ...combo, interest, minBudget: 0, maxBudget: 99999 })).data);
+          if (list.length > 0) { console.log("[fetchProducts] try3 combo hit:", combo); break; }
+        }
+      }
+
+      // Try 4 (nuclear): load all products, filter client-side by interest keyword
+      if (list.length === 0) {
+        console.log("[fetchProducts] try4: client-side filter by interest keyword");
+        const allRes = await getProducts();
+        const allRaw =
+          allRes.data?.data || allRes.data?.items || allRes.data?.products ||
+          allRes.data || [];
+        const keyword = interest.toLowerCase();
+        list = (Array.isArray(allRaw) ? allRaw : [])
+          .filter((p) => {
+            const cat = (p.categoryName || p.categorySlug || p.category || "").toLowerCase();
+            const title = (p.title || p.name || "").toLowerCase();
+            const desc = (p.description || "").toLowerCase();
+            const tags = (p.tags || []).join(" ").toLowerCase();
+            return cat.includes(keyword) || title.includes(keyword) ||
+                   desc.includes(keyword) || tags.includes(keyword);
+          })
+          .map(normalizeProduct);
+        console.log("[fetchProducts] try4 results:", list.length);
       }
 
       setProducts(list);
-    } catch {
+    } catch (e) {
+      console.error("[fetchProducts] error:", e);
       setProducts([]);
     } finally {
       setProductsLoading(false);
@@ -87,10 +120,17 @@ function GiftFinder() {
     try {
       const { text: aiText, params } = await chatWithGroq(history, query);
       setMessages((prev) => [...prev, { role: "ai", text: aiText }]);
+      // Only trigger a new search if params actually changed
       if (params) {
-        setLastParams(params);
-        setAiCard(aiText);
-        fetchProducts(params);
+        const paramsKey = params.recipient + params.occasion + params.interest + params.maxBudget;
+        const lastKey = lastParams
+          ? lastParams.recipient + lastParams.occasion + lastParams.interest + lastParams.maxBudget
+          : null;
+        if (paramsKey !== lastKey) {
+          setLastParams(params);
+          setAiCard(aiText);
+          fetchProducts(params);
+        }
       }
     } catch (err) {
       const isKeyMissing = err?.message?.includes("not set") || err?.message?.includes("API key");
