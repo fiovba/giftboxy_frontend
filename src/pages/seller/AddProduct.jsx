@@ -84,10 +84,16 @@ function AddProduct() {
         const BASE = "https://giftboxy-backend-1.onrender.com";
         const normalized = product.images.map((img) => {
           if (typeof img === "string") {
-            return { id: null, url: img.startsWith("http") ? img : `${BASE}${img}` };
+            const url = img.startsWith("http") ? img : `${BASE}${img}`;
+            // Extract numeric DB id from URL query/path, or Cloudinary filename as fallback
+            const cloudinaryId = url.split("/").pop()?.split("?")[0]?.split(".")[0] || null;
+            return { id: cloudinaryId, url };
           }
-          const url = img.url || img.imageUrl || "";
-          return { id: img.id ?? img.imageId ?? null, url: url.startsWith("http") ? url : `${BASE}${url}` };
+          const url = (img.url || img.imageUrl || "").startsWith("http")
+            ? (img.url || img.imageUrl)
+            : `${BASE}${img.url || img.imageUrl || ""}`;
+          const fallbackId = url.split("/").pop()?.split("?")[0]?.split(".")[0] || null;
+          return { id: img.id ?? img.imageId ?? fallbackId, url };
         });
         setExistingImages(normalized);
         setImagePreviews(normalized.map((i) => i.url));
@@ -158,8 +164,11 @@ function AddProduct() {
     } else {
       // Existing backend image removed — track for deletion
       const existing = existingImages.find((img) => img.url === preview);
-      if (existing?.id) {
-        setRemovedImageIds((prev) => [...prev, existing.id]);
+      const imgId = existing?.id
+        ?? preview.split("/").pop()?.split("?")[0]?.split(".")[0]
+        ?? null;
+      if (imgId) {
+        setRemovedImageIds((prev) => [...prev, imgId]);
       }
       setExistingImages((prev) => prev.filter((img) => img.url !== preview));
     }
@@ -190,7 +199,13 @@ function AddProduct() {
       let productId = id;
 
       if (isEditMode) {
-        await sellerService.updateProduct(id, form);
+        // Send remaining image URLs so backend can drop removed ones if it supports it
+        const remainingUrls = existingImages.map((i) => i.url);
+        await sellerService.updateProduct(id, {
+          ...form,
+          images: remainingUrls,
+          imageUrls: remainingUrls,
+        });
         toast.success("Product updated successfully.");
       } else {
         const res = await sellerService.addProduct({ ...form, sellerId });
