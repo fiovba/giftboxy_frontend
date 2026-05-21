@@ -6,6 +6,8 @@ function FilterSidebar({
   selectedCategories,
   minPrice,
   maxPrice,
+  priceMin = 0,
+  priceMax = 500,
   selectedRating,
   personalized,
   onApplyFilters,
@@ -14,31 +16,50 @@ function FilterSidebar({
   const [categories, setCategories] = useState([]);
   const [localCategories, setLocalCategories] = useState(selectedCategories || []);
   const [localSearch, setLocalSearch] = useState("");
-  const [localMinPrice] = useState(0);
-  const [localMaxPrice, setLocalMaxPrice] = useState(Number(maxPrice) || 500);
+  const [localMinPrice, setLocalMinPrice] = useState(priceMin);
+  const [localMaxPrice, setLocalMaxPrice] = useState(priceMax);
   const [localRating, setLocalRating] = useState(selectedRating || "");
   const [localPersonalized, setLocalPersonalized] = useState(personalized === "true");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    categoryService.getCategories()
+    categoryService
+      .getCategories()
       .then((cats) => setCategories(Array.isArray(cats) ? cats : []))
       .catch(() => setCategories([]));
   }, []);
 
+  // When products load, set price bounds unless user already filtered via URL
+  useEffect(() => {
+    if (!minPrice) setLocalMinPrice(priceMin);
+    const hasUrlMax = maxPrice && Number(maxPrice) !== 99999;
+    if (!hasUrlMax) setLocalMaxPrice(priceMax);
+  }, [priceMin, priceMax]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync from URL params (e.g. browser back/forward)
   useEffect(() => {
     setLocalCategories(selectedCategories || []);
-    setLocalMaxPrice(Number(maxPrice) || 500);
+    if (minPrice) setLocalMinPrice(Number(minPrice));
+    const hasUrlMax = maxPrice && Number(maxPrice) !== 99999;
+    if (hasUrlMax) setLocalMaxPrice(Number(maxPrice));
     setLocalRating(selectedRating || "");
     setLocalPersonalized(personalized === "true");
-  }, [selectedCategories, maxPrice, selectedRating, personalized]);
+  }, [selectedCategories, minPrice, maxPrice, selectedRating, personalized]);
 
   const toggleCategory = (slug) => {
-    if (localCategories.includes(slug)) {
-      setLocalCategories(localCategories.filter((item) => item !== slug));
-    } else {
-      setLocalCategories([...localCategories, slug]);
-    }
+    setLocalCategories((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
+  };
+
+  const handleMinChange = (e) => {
+    const val = Math.min(Number(e.target.value), localMaxPrice - 1);
+    setLocalMinPrice(val);
+  };
+
+  const handleMaxChange = (e) => {
+    const val = Math.max(Number(e.target.value), localMinPrice + 1);
+    setLocalMaxPrice(val);
   };
 
   const apply = () => {
@@ -86,20 +107,39 @@ function FilterSidebar({
 
       {/* Price Range */}
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-1">
           <h3 className="text-xs font-black uppercase">Price Range</h3>
           <span className="text-[#D90452] text-xs font-black">
-            $0 — ${localMaxPrice}
+            ${localMinPrice} — ${localMaxPrice}
           </span>
         </div>
-        <input
-          type="range"
-          min="0"
-          max="500"
-          value={localMaxPrice}
-          onChange={(e) => setLocalMaxPrice(Number(e.target.value))}
-          className="w-full accent-[#D90452]"
-        />
+        <p className="text-[10px] text-[#A0918B] mb-3">
+          All products: ${priceMin} – ${priceMax}
+        </p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-[10px] text-[#7A7272] font-bold uppercase">Min</label>
+            <input
+              type="range"
+              min={priceMin}
+              max={priceMax}
+              value={localMinPrice}
+              onChange={handleMinChange}
+              className="w-full accent-[#D90452] mt-1"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] text-[#7A7272] font-bold uppercase">Max</label>
+            <input
+              type="range"
+              min={priceMin}
+              max={priceMax}
+              value={localMaxPrice}
+              onChange={handleMaxChange}
+              className="w-full accent-[#D90452] mt-1"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Rating */}
@@ -123,7 +163,11 @@ function FilterSidebar({
           onClick={() => setLocalPersonalized(!localPersonalized)}
           className={`w-12 h-7 rounded-full p-1 transition ${localPersonalized ? "bg-[#D90452]" : "bg-[#E6DAD5]"}`}
         >
-          <span className={`block w-5 h-5 bg-white rounded-full transition ${localPersonalized ? "translate-x-5" : "translate-x-0"}`} />
+          <span
+            className={`block w-5 h-5 bg-white rounded-full transition ${
+              localPersonalized ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
         </button>
       </div>
 

@@ -147,6 +147,13 @@ function Explore() {
     currentPage * PAGE_SIZE
   );
 
+  const priceMin = allProducts.length
+    ? Math.floor(Math.min(...allProducts.map((p) => Number(p.price || 0))))
+    : 0;
+  const priceMax = allProducts.length
+    ? Math.ceil(Math.max(...allProducts.map((p) => Number(p.price || 0))))
+    : 500;
+
   const applyFilters = (filters) => {
     const params = new URLSearchParams(searchParams);
 
@@ -189,6 +196,8 @@ function Explore() {
           selectedCategories={selectedCategories}
           minPrice={minPrice}
           maxPrice={maxPrice}
+          priceMin={priceMin}
+          priceMax={priceMax}
           selectedRating={selectedRating}
           personalized={personalized}
           onApplyFilters={applyFilters}
