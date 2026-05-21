@@ -6,6 +6,19 @@ import { giftFinder, getProducts } from "../services/productService";
 import { normalizeProductList, normalizeProduct } from "../utils/productUtils";
 import ExploreProductCard from "../components/explore/ExploreProductCard";
 
+// Each interest maps to keywords that products might use in title/category/description
+const INTEREST_KEYWORDS = {
+  "Jewelry":      ["jewelry", "jewel", "jewellery", "ring", "necklace", "bracelet", "earring", "pendant", "gold", "silver", "diamond", "gemstone"],
+  "Personalized": ["personalized", "personalised", "custom", "engraved", "monogram", "name", "initial", "bespoke"],
+  "Home Decor":   ["home", "decor", "decoration", "candle", "lamp", "vase", "cushion", "pillow", "blanket", "throw", "mug", "frame", "shelf", "plant", "diffuser", "cozy", "cosy"],
+  "Beauty":       ["beauty", "perfume", "skincare", "skin care", "makeup", "cosmetic", "fragrance", "serum", "lotion", "face", "lip", "body"],
+  "Accessories":  ["accessory", "accessories", "bag", "purse", "wallet", "scarf", "hat", "watch", "belt", "sunglasses", "gloves"],
+  "Food":         ["food", "chocolate", "coffee", "tea", "cake", "sweet", "candy", "snack", "gourmet", "honey", "jam", "cookie", "biscuit", "box"],
+  "Art":          ["art", "painting", "drawing", "print", "poster", "sculpture", "craft", "handmade", "illustration", "sketch"],
+  "Eco-Friendly": ["eco", "organic", "sustainable", "natural", "green", "recycled", "biodegradable", "bamboo", "reusable", "zero waste"],
+  "Vintage":      ["vintage", "antique", "retro", "classic", "old", "collectible"],
+};
+
 const INITIAL_MESSAGE = {
   role: "ai",
   text: "Hey! I'm Giftie 🎁 Tell me about who you're shopping for and I'll find the perfect gift!",
@@ -83,19 +96,23 @@ function GiftFinder() {
       }
     }
 
-    // Try 4 (nuclear): all products, client-side keyword filter
+    // Try 4 (nuclear): all products, client-side multi-keyword filter
     if (list.length === 0) {
       const allRes = await getProducts();
       const allRaw = allRes.data?.data || allRes.data?.items || allRes.data?.products || allRes.data || [];
-      const kw = interest.toLowerCase();
+      // Use expanded keyword list so "Home Decor" matches candle/blanket/mug etc.
+      const kwList = INTEREST_KEYWORDS[interest] || [interest.toLowerCase()];
       list = (Array.isArray(allRaw) ? allRaw : [])
         .filter((p) => {
-          const c = (p.categoryName || p.categorySlug || p.category || "").toLowerCase();
-          const t = (p.title || p.name || "").toLowerCase();
-          const d = (p.description || "").toLowerCase();
-          return c.includes(kw) || t.includes(kw) || d.includes(kw);
+          const haystack = [
+            p.categoryName, p.categorySlug, p.category,
+            p.title, p.name, p.description,
+            ...(Array.isArray(p.tags) ? p.tags : []),
+          ].join(" ").toLowerCase();
+          return kwList.some((kw) => haystack.includes(kw));
         })
         .map(normalizeProduct);
+      console.log("[fetchProducts] nuclear hit:", list.length, "keywords:", kwList);
     }
     return list;
   };
