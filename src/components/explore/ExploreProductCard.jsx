@@ -50,11 +50,31 @@ function ExploreProductCard({ product }) {
       return;
     }
     addToCart(product);
-    toast.success("Added to cart!");
+    toast.custom(
+      (t) => (
+        <div className={`flex items-center gap-3 bg-white rounded-[20px] shadow-2xl border border-[#EFE4DF] px-4 py-3 min-w-[240px] max-w-[320px] ${t.visible ? "toast-enter" : "toast-leave"}`}>
+          {image ? (
+            <img src={image} alt="" className="w-11 h-11 rounded-[12px] object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-11 h-11 rounded-[12px] bg-[#F8E7EC] flex items-center justify-center flex-shrink-0 text-lg">🛒</div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-black text-[#1E1B1B] text-sm">Added to cart!</p>
+            <p className="text-xs text-[#7A7272] truncate mt-0.5">{product.title}</p>
+          </div>
+          <div className="w-7 h-7 bg-[#D90452] rounded-full flex items-center justify-center flex-shrink-0">
+            <svg viewBox="0 0 12 10" fill="none" className="w-3 h-3">
+              <path d="M1 5l3 3 7-7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </div>
+      ),
+      { duration: 2500 }
+    );
   };
 
   return (
-    <div className="bg-white rounded-[26px] overflow-hidden shadow-sm hover:shadow-xl transition border border-[#EEE4DF]">
+    <div className="bg-white rounded-[26px] overflow-hidden shadow-sm border border-[#EEE4DF] card-lift anim-fade-up">
       <div className="relative">
         <Link to={`/product/${product.slug}`}>
           {image ? (
@@ -128,7 +148,7 @@ function ExploreProductCard({ product }) {
           className={`mt-5 w-full py-3 rounded-full font-black flex items-center justify-center gap-2 transition ${
             stock <= 0
               ? "bg-[#E7DDDA] text-[#8B7C77] cursor-not-allowed"
-              : "bg-[#D90452] text-white hover:bg-[#BE0348]"
+              : "bg-[#D90452] text-white hover:bg-[#BE0348] btn-press"
           }`}
         >
           <FiShoppingCart />
