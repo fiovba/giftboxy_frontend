@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiSend, FiRefreshCw } from "react-icons/fi";
-import { chatWithGemini } from "../services/geminiService";
+import { chatWithGroq } from "../services/groqService";
 import { giftFinder } from "../services/productService";
 import { normalizeProductList } from "../utils/productUtils";
 import ExploreProductCard from "../components/explore/ExploreProductCard";
@@ -63,7 +63,7 @@ function GiftFinder() {
     setAiLoading(true);
 
     try {
-      const { text: aiText, params } = await chatWithGemini(history, query);
+      const { text: aiText, params } = await chatWithGroq(history, query);
       setMessages((prev) => [...prev, { role: "ai", text: aiText }]);
 
       if (params) {
@@ -74,7 +74,7 @@ function GiftFinder() {
     } catch (err) {
       const isKeyMissing = err?.message?.includes("not set") || err?.message?.includes("API key");
       const errText = isKeyMissing
-        ? "API key is not configured. Please add VITE_GEMINI_API_KEY in Vercel → Settings → Environment Variables, then redeploy. 🔑"
+        ? "API key is not configured. Please add VITE_GROQ_API_KEY in Vercel → Settings → Environment Variables, then redeploy. 🔑"
         : "Sorry, I'm having trouble connecting. Please try again! 😊";
       console.error("[Giftie]", err?.message);
       setMessages((prev) => [...prev, { role: "ai", text: errText }]);
@@ -109,7 +109,7 @@ function GiftFinder() {
               <p className="font-black text-[#1E1B1B] text-sm">Giftie</p>
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                <p className="text-[10px] text-[#7A7272] font-bold">Powered by Gemini AI</p>
+                <p className="text-[10px] text-[#7A7272] font-bold">Powered by Groq AI</p>
               </div>
             </div>
           </div>
