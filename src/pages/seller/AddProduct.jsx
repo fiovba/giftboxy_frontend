@@ -82,6 +82,7 @@ function AddProduct() {
       });
 
       if (product.images?.length > 0) {
+        console.log("PRODUCT IMAGES RAW:", JSON.stringify(product.images));
         const BASE = "https://giftboxy-backend-1.onrender.com";
         const normalized = product.images.map((img) => {
           if (typeof img === "string") {
