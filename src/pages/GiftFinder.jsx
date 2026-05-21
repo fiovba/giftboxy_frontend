@@ -71,11 +71,13 @@ function GiftFinder() {
         setAiCard(aiText);
         fetchProducts(params);
       }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", text: "Sorry, I'm having trouble connecting. Please try again! 😊" },
-      ]);
+    } catch (err) {
+      const isKeyMissing = err?.message?.includes("not set") || err?.message?.includes("API key");
+      const errText = isKeyMissing
+        ? "API key is not configured. Please add VITE_GEMINI_API_KEY in Vercel → Settings → Environment Variables, then redeploy. 🔑"
+        : "Sorry, I'm having trouble connecting. Please try again! 😊";
+      console.error("[Giftie]", err?.message);
+      setMessages((prev) => [...prev, { role: "ai", text: errText }]);
     } finally {
       setAiLoading(false);
       inputRef.current?.focus();

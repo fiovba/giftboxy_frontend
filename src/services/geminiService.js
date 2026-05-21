@@ -18,7 +18,10 @@ Keep responses short, warm, and conversational (2-4 sentences max). Use 1-2 emoj
 Do NOT include the SEARCH block if you still need more info from the user.`;
 
 export const chatWithGemini = async (history, userMessage) => {
-  if (!API_KEY) throw new Error("VITE_GEMINI_API_KEY is not set");
+  if (!API_KEY) {
+    console.error("[geminiService] VITE_GEMINI_API_KEY is not set. Check Vercel env vars.");
+    throw new Error("VITE_GEMINI_API_KEY is not set");
+  }
 
   const contents = [
     { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
@@ -39,7 +42,11 @@ export const chatWithGemini = async (history, userMessage) => {
     }),
   });
 
-  if (!res.ok) throw new Error("Gemini API error: " + res.status);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error("[geminiService] API error", res.status, body);
+    throw new Error("Gemini API error: " + res.status);
+  }
   const data = await res.json();
   const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
