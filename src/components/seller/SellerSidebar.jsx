@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   FiGrid, FiBox, FiShoppingBag, FiPlusCircle,
-  FiUser, FiLogOut, FiMessageCircle, FiHelpCircle, FiMenu,
+  FiUser, FiLogOut, FiMessageCircle, FiHelpCircle, FiMenu, FiTag,
 } from "react-icons/fi";
 import { useState } from "react";
 
@@ -20,6 +20,7 @@ function SellerSidebar() {
     { name: "Orders", path: "/seller/orders", icon: <FiShoppingBag /> },
     { name: "Messages", path: "/seller/messages", icon: <FiMessageCircle /> },
     { name: "Questions", path: "/seller/questions", icon: <FiHelpCircle /> },
+    { name: "Coupons", path: "/seller/coupons", icon: <FiTag /> },
     { name: "Add", path: "/seller/add-product", icon: <FiPlusCircle /> },
     { name: "Profile", path: "/seller/profile", icon: <FiUser /> },
   ];

@@ -20,6 +20,9 @@ function AddProduct() {
   const [apiCategories, setApiCategories] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  // existing images loaded from backend: [{id, url}]
+  const [existingImages, setExistingImages] = useState([]);
+  const [removedImageIds, setRemovedImageIds] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
 
@@ -79,11 +82,15 @@ function AddProduct() {
 
       if (product.images?.length > 0) {
         const BASE = "https://giftboxy-backend-1.onrender.com";
-        setImagePreviews(
-          product.images.map(img =>
-            img.startsWith("http") ? img : `${BASE}${img}`
-          )
-        );
+        const normalized = product.images.map((img) => {
+          if (typeof img === "string") {
+            return { id: null, url: img.startsWith("http") ? img : `${BASE}${img}` };
+          }
+          const url = img.url || img.imageUrl || "";
+          return { id: img.id ?? img.imageId ?? null, url: url.startsWith("http") ? url : `${BASE}${url}` };
+        });
+        setExistingImages(normalized);
+        setImagePreviews(normalized.map((i) => i.url));
       }
     }).catch(() => {
       toast.error("Product tapılmadı.");
@@ -143,11 +150,18 @@ function AddProduct() {
 
   const removeImage = (index) => {
     const preview = imagePreviews[index];
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
     if (preview.startsWith("blob:")) {
-      const blobPreviews = imagePreviews.filter(p => p.startsWith("blob:"));
+      const blobPreviews = imagePreviews.filter((p) => p.startsWith("blob:"));
       const blobIndex = blobPreviews.indexOf(preview);
-      setImageFiles(prev => prev.filter((_, i) => i !== blobIndex));
+      setImageFiles((prev) => prev.filter((_, i) => i !== blobIndex));
+    } else {
+      // Existing backend image removed — track for deletion
+      const existing = existingImages.find((img) => img.url === preview);
+      if (existing?.id) {
+        setRemovedImageIds((prev) => [...prev, existing.id]);
+      }
+      setExistingImages((prev) => prev.filter((img) => img.url !== preview));
     }
   };
 
@@ -184,6 +198,12 @@ function AddProduct() {
         toast.success("Product added successfully.");
       }
 
+      // Delete removed existing images
+      if (isEditMode && removedImageIds.length > 0) {
+        await Promise.allSettled(removedImageIds.map((imgId) => imageService.deleteImage(imgId)));
+      }
+
+      // Upload new images
       if (imageFiles.length > 0 && productId) {
         setUploading(true);
         try {

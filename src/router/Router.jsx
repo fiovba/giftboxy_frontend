@@ -22,6 +22,7 @@ import SellerOrders from "../pages/seller/SellerOrders";
 import SellerProfile from "../pages/seller/SellerProfile";
 import AddProduct from "../pages/seller/AddProduct";
 import SellerQuestions from "../pages/seller/SellerQuestions";
+import SellerCoupons from "../pages/seller/SellerCoupons";
 import ChangePassword from "../pages/authPages/ChangePassword";
 import BuyerProfile from "../pages/buyer/BuyerProfile";
 import About from "../pages/About";
@@ -61,6 +62,7 @@ export const router = createBrowserRouter([
       { path: "add-product", element: <AddProduct /> },
       { path: "edit-product/:id", element: <AddProduct /> },
       { path: "questions", element: <SellerQuestions /> },
+      { path: "coupons", element: <SellerCoupons /> },
       { path: "change-password", element: <ChangePassword /> },
     ],
   },

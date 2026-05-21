@@ -17,10 +17,14 @@ export const sendMessage = (data) =>
 export const getUnreadCount = () =>
   api.get("/chat/unread-count");
 
+export const markAsRead = (conversationId) =>
+  api.put(`/chat/conversations/${conversationId}/read`);
+
 export const chatService = {
   getConversations,
   getConversationMessages,
   createConversation,
   sendMessage,
   getUnreadCount,
+  markAsRead,
 };

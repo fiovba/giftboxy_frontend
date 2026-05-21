@@ -4,7 +4,14 @@ import { authService } from "../services/authService";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [role, setRole] = useState(localStorage.getItem("role"));
   const [loading, setLoading] = useState(true);
 
@@ -27,6 +34,7 @@ export function AuthProvider({ children }) {
     const userObj = data.user || data.buyer || data.seller || data;
     setUser(userObj);
     setRole(userRole);
+    localStorage.setItem("user", JSON.stringify(userObj));
   };
 
   const buyerLogin = async (form) => {
@@ -56,10 +64,13 @@ export function AuthProvider({ children }) {
   const getMe = async () => {
     try {
       const res = await authService.getMe();
-       console.log("GET ME RESPONSE:", res.data);
       setUser(res.data);
-    } catch {
-      logout();
+      localStorage.setItem("user", JSON.stringify(res.data));
+    } catch (error) {
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        logout();
+      }
+      // Network/timeout errors: keep existing cached user and role
     } finally {
       setLoading(false);
     }
@@ -77,6 +88,7 @@ export function AuthProvider({ children }) {
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("role");
+      localStorage.removeItem("user");
       setUser(null);
       setRole(null);
     }

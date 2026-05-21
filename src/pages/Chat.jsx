@@ -10,11 +10,12 @@ import {
   getConversationMessages,
   createConversation,
   sendMessage,
+  markAsRead,
 } from "../services/chatService";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "https://giftboxy-backend-1.onrender.com";
 const HUB_URL = import.meta.env.VITE_CHAT_HUB_URL || `${BASE_URL}/hubs/chat`;
-const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80";
+const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23F8E7EC'/%3E%3Ccircle cx='20' cy='16' r='7' fill='%23D90452'/%3E%3Cellipse cx='20' cy='34' rx='12' ry='7' fill='%23D90452'/%3E%3C/svg%3E";
 
 const getFullUrl = (url) => {
   if (!url) return null;
@@ -89,20 +90,58 @@ function Chat() {
       .finally(() => setConvLoading(false));
   }, [initSellerId]);
 
+  const parseMessages = (data) =>
+    Array.isArray(data) ? data
+      : Array.isArray(data?.messages) ? data.messages
+        : Array.isArray(data?.items) ? data.items
+          : Array.isArray(data?.data) ? data.data : [];
+
   useEffect(() => {
     if (!activeConv?.id) return;
     setMessages([]);
+
     getConversationMessages(activeConv.id)
-      .then((res) => {
-        const data = res.data;
-        const list = Array.isArray(data) ? data
-          : Array.isArray(data?.messages) ? data.messages
+      .then((res) => setMessages(parseMessages(res.data)))
+      .catch(() => { });
+
+    // Mark as read — update UI immediately, call API silently
+    setConversations((prev) =>
+      prev.map((c) => c.id === activeConv.id ? { ...c, unreadCount: 0 } : c)
+    );
+    markAsRead(activeConv.id).catch(() => { });
+
+    // Join SignalR group for this conversation
+    if (connectionRef.current?.state === "Connected") {
+      connectionRef.current.invoke("JoinConversation", String(activeConv.id)).catch(() => { });
+    }
+  }, [activeConv?.id]);
+
+  // Poll messages every 8 seconds as SignalR fallback
+  useEffect(() => {
+    if (!activeConv?.id) return;
+    const interval = setInterval(() => {
+      getConversationMessages(activeConv.id)
+        .then((res) => setMessages(parseMessages(res.data)))
+        .catch(() => { });
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [activeConv?.id]);
+
+  // Poll conversation list every 15 seconds for unread counts
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getConversations()
+        .then((res) => {
+          const data = res.data;
+          const list = Array.isArray(data) ? data
             : Array.isArray(data?.items) ? data.items
               : Array.isArray(data?.data) ? data.data : [];
-        setMessages(list);
-      })
-      .catch(() => { });
-  }, [activeConv?.id]);
+          setConversations(list);
+        })
+        .catch(() => { });
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -125,7 +164,13 @@ function Chat() {
       );
     });
 
-    connection.start().catch(() => { });
+    connection.start()
+      .then(() => {
+        if (activeConv?.id) {
+          connection.invoke("JoinConversation", String(activeConv.id)).catch(() => { });
+        }
+      })
+      .catch(() => { });
     connectionRef.current = connection;
     return () => { connection.stop(); };
   }, []);
