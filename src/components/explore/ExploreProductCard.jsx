@@ -76,6 +76,7 @@ function ExploreProductCard({ product }) {
   };
 
   return (
+    <div>
     <div className="bg-white rounded-[26px] overflow-hidden shadow-sm border border-[#EEE4DF] card-lift anim-fade-up">
       <div className="relative">
         <Link to={`/product/${product.slug}`}>
