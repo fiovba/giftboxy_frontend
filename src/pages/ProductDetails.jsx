@@ -10,6 +10,7 @@ import { GoHeartFill } from "react-icons/go";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import AuthPromptModal from "../components/common/AuthPromptModal";
 import { getProductBySlug } from "../services/productService";
 import { getProductReviews, createReview } from "../services/reviewService";
 import { getProductQuestions, createQuestion } from "../services/questionService";
@@ -27,6 +28,7 @@ function ProductDetails() {
   const [productLoading, setProductLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [authModal, setAuthModal] = useState(null);
   const [backendRating, setBackendRating] = useState(null);
 
   const [personalization, setPersonalization] = useState({
@@ -157,7 +159,7 @@ function ProductDetails() {
   };
 
 const handleMessageSeller = () => {
-  if (!isAuthenticated) { toast.error("Please sign in to message sellers."); return; }
+  if (!isAuthenticated) { setAuthModal("cart"); return; }
   if (isSeller) { toast.error("Sellers cannot message other sellers."); return; }
   const sellerId = product.sellerUserId || product.sellerId || product.seller?.id;
   if (sellerId) {
@@ -498,6 +500,12 @@ const handleMessageSeller = () => {
           </div>
         </section>
       </div>
+
+      <AuthPromptModal
+        isOpen={authModal !== null}
+        trigger={authModal || "cart"}
+        onClose={() => setAuthModal(null)}
+      />
     </div>
   );
 }

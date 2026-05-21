@@ -3,14 +3,17 @@ import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import { GoHeartFill } from "react-icons/go";
 import { Link } from "react-router-dom";
 
+import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
+import AuthPromptModal from "../common/AuthPromptModal";
 
 function ExploreProductCard({ product }) {
   const { isAuthenticated } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const [authModal, setAuthModal] = useState(null); // "cart" | "wishlist" | null
 
   const liked = isInWishlist(product.id);
 
@@ -29,7 +32,7 @@ function ExploreProductCard({ product }) {
 
   const handleWishlist = async () => {
     if (!isAuthenticated) {
-      toast.error("Sign in to save items to your wishlist.");
+      setAuthModal("wishlist");
       return;
     }
     const wasLiked = liked;
@@ -42,7 +45,7 @@ function ExploreProductCard({ product }) {
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
-      toast.error("Sign in to add items to cart.");
+      setAuthModal("cart");
       return;
     }
     if (stock <= 0) {
@@ -156,6 +159,12 @@ function ExploreProductCard({ product }) {
         </button>
       </div>
     </div>
+
+    <AuthPromptModal
+      isOpen={authModal !== null}
+      trigger={authModal || "cart"}
+      onClose={() => setAuthModal(null)}
+    />
   );
 }
 
