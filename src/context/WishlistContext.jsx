@@ -59,7 +59,7 @@ export function WishlistProvider({ children }) {
         String(item.productId) === String(productId) ||
         String(item.product?.id) === String(productId)
     );
-    return item?.id;
+    return item?.id || item?.wishlistItemId || item?.wishlistId;
   };
 
   const toggleWishlist = async (product) => {

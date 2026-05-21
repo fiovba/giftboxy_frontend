@@ -5,6 +5,7 @@ export const createOrder = (data) =>
     shippingAddress: data.shippingAddress,
     paymentMethod: Number(data.paymentMethod) || 1,
     ...(data.couponCode ? { couponCode: data.couponCode } : {}),
+    ...(data.giftMessage ? { giftMessage: data.giftMessage } : {}),
   });
 
 export const getMyOrders = () =>

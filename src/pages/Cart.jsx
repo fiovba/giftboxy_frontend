@@ -14,6 +14,7 @@ function Cart() {
   const { cart, loading, updateQuantity, removeFromCart, clearCart } = useCart();
 
   const [couponCode, setCouponCode] = useState("");
+  const [appliedCouponCode, setAppliedCouponCode] = useState(null);
   const [couponCartTotal, setCouponCartTotal] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [giftMessage, setGiftMessage] = useState("");
@@ -67,6 +68,7 @@ function Cart() {
 
       if (newTotal !== undefined && !isNaN(newTotal)) {
         setCouponCartTotal(newTotal);
+        setAppliedCouponCode(normalizedCode);
         toast.success("Coupon applied! 🎉");
       } else {
         toast.error("Invalid coupon response.");
@@ -99,8 +101,8 @@ function Cart() {
       if (giftMessage.trim()) {
         orderPayload.giftMessage = giftMessage.trim();
       }
-      if (couponCode.trim()) {
-        orderPayload.couponCode = couponCode.trim().toUpperCase();
+      if (appliedCouponCode) {
+        orderPayload.couponCode = appliedCouponCode;
       }
       await orderService.createOrder(orderPayload);
       toast.success("Order placed successfully!");

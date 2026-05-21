@@ -14,11 +14,11 @@ function ExploreProductCard({ product }) {
 
   const liked = isInWishlist(product.id);
 
-const image =
-  product.images?.[0] ||
-  product.imageUrl ||
-  product.thumbnailUrl ||
-  "";
+  const image =
+    product.images?.[0] ||
+    product.imageUrl ||
+    product.thumbnailUrl ||
+    "";
 
   const stock =
     product.stock ??
@@ -27,52 +27,48 @@ const image =
     product.availableStock ??
     0;
 
-  const handleWishlist = () => {
+  const handleWishlist = async () => {
     if (!isAuthenticated) {
-      toast.error("Like etmək üçün giriş edin və ya qeydiyyatdan keçin.");
+      toast.error("Sign in to save items to your wishlist.");
       return;
     }
-
-    toggleWishlist(product);
-
-    if (liked) {
-      toast.success("Məhsul wishlist-dən silindi.");
-    } else {
-      toast.success("Məhsul wishlist-ə əlavə edildi.");
+    const wasLiked = liked;
+    await toggleWishlist(product);
+    if (wasLiked) {
+      toast.success("Removed from wishlist.");
     }
+    // No toast when adding — per user preference
   };
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
-      toast.error("Səbətə əlavə etmək üçün giriş edin və ya qeydiyyatdan keçin.");
+      toast.error("Sign in to add items to cart.");
       return;
     }
-
     if (stock <= 0) {
-      toast.error("Bu məhsul stokda yoxdur.");
+      toast.error("This product is out of stock.");
       return;
     }
-
     addToCart(product);
-    toast.success("Məhsul səbətə əlavə edildi.");
+    toast.success("Added to cart!");
   };
 
   return (
     <div className="bg-white rounded-[26px] overflow-hidden shadow-sm hover:shadow-xl transition border border-[#EEE4DF]">
       <div className="relative">
-       <Link to={`/product/${product.slug}`}>
-  {image ? (
-    <img
-      src={image}
-      alt={product.title}
-      className="h-[240px] w-full object-cover"
-    />
-  ) : (
-    <div className="h-[240px] w-full bg-[#F8F1EC] flex items-center justify-center text-[#8B7C77] font-black">
-      No Image
-    </div>
-  )}
-</Link>
+        <Link to={`/product/${product.slug}`}>
+          {image ? (
+            <img
+              src={image}
+              alt={product.title}
+              className="h-[240px] w-full object-cover"
+            />
+          ) : (
+            <div className="h-[240px] w-full bg-[#F8F1EC] flex items-center justify-center text-[#8B7C77] font-black">
+              No Image
+            </div>
+          )}
+        </Link>
 
         {(product.badge || product.isBestSeller) && (
           <span className="absolute top-4 left-4 bg-[#D90452] text-white px-3 py-2 rounded-full text-xs font-black">
@@ -118,7 +114,6 @@ const image =
           <span className="text-[#D90452] font-black text-xl">
             ${product.price}
           </span>
-
           {!!product.oldPrice && (
             <span className="text-sm text-[#A39A96] line-through">
               ${product.oldPrice}

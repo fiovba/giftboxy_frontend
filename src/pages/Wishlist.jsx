@@ -119,26 +119,30 @@ function Wishlist() {
           const price = product.price;
           const oldPrice = product.oldPrice;
           const category = product.category?.name || product.category || product.categoryName || "";
-          const slug = product.slug || "";
+          const slug = product.slug || item.productSlug || "";
+          const productPath = slug ? `/product/${slug}` : null;
 
           return (
             <div
-              key={
-                item.id ||
-                item.wishlistItemId ||
-                item.productId ||
-                item.product?.id
-              }
+              key={item.id || item.wishlistItemId || item.productId || product?.id}
               className="bg-white rounded-[26px] overflow-hidden border border-[#EFE4DF] hover:shadow-lg transition group"
             >
               <div className="relative">
-                <Link to={`/product/${slug}`}>
+                {productPath ? (
+                  <Link to={productPath}>
+                    <img
+                      src={imgSrc}
+                      alt={title}
+                      className="w-full h-[220px] object-cover group-hover:scale-105 transition duration-500"
+                    />
+                  </Link>
+                ) : (
                   <img
                     src={imgSrc}
                     alt={title}
-                    className="w-full h-[220px] object-cover group-hover:scale-105 transition duration-500"
+                    className="w-full h-[220px] object-cover"
                   />
-                </Link>
+                )}
 
                 <button
                   onClick={() => handleRemove(item)}
@@ -155,11 +159,17 @@ function Wishlist() {
                   </p>
                 )}
 
-                <Link to={`/product/${slug}`}>
+                {productPath ? (
+                  <Link to={productPath}>
+                    <h3 className="mt-2 font-black text-[#1E1B1B] leading-snug line-clamp-2 min-h-[44px] hover:text-[#D90452] transition">
+                      {title}
+                    </h3>
+                  </Link>
+                ) : (
                   <h3 className="mt-2 font-black text-[#1E1B1B] leading-snug line-clamp-2 min-h-[44px]">
                     {title}
                   </h3>
-                </Link>
+                )}
 
                 <div className="flex items-center gap-3 mt-3">
                   <span className="text-[#D90452] font-black text-xl">${price}</span>
