@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
+import ChatLayout from "../layouts/ChatLayout";
 import Home from "../pages/Home";
 import Explore from "../pages/Explore";
 import GiftFinder from "../pages/GiftFinder";
@@ -39,12 +40,18 @@ export const router = createBrowserRouter([
       { path: "product/:slug", element: <ProductDetails /> },
       { path: "wishlist", element: <Wishlist /> },
       { path: "cart", element: <Cart /> },
-      { path: "chat", element: <Chat /> },
-      { path: "messages", element: <Chat /> },
       { path: "orders", element: <Orders /> },
       { path: "change-password", element: <ChangePassword /> },
       { path: "profile", element: <BuyerProfile/> },
       { path: "about", element: <About /> },
+    ],
+  },
+  {
+    path: "/",
+    element: <ChatLayout />,
+    children: [
+      { path: "chat", element: <Chat /> },
+      { path: "messages", element: <Chat /> },
     ],
   },
   { path: "/login", element: <Login /> },

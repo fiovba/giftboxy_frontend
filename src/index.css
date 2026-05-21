@@ -58,3 +58,19 @@ html {
   scrollbar-width: thin;
   scrollbar-color: #d90452 #f5f2ef;
 }
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-in {
+  animation: msgIn 0.25s ease-out both;
+}
+
+@keyframes typingDot {
+  0%, 80%, 100% { transform: translateY(0); }
+  40%           { transform: translateY(-5px); }
+}
+.typing-dot:nth-child(1) { animation: typingDot 1s infinite 0ms; }
+.typing-dot:nth-child(2) { animation: typingDot 1s infinite 150ms; }
+.typing-dot:nth-child(3) { animation: typingDot 1s infinite 300ms; }

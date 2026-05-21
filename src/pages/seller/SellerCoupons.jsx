@@ -10,11 +10,10 @@ function SellerCoupons() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     code: "",
-    discountType: "percentage",
-    discountValue: "",
-    minOrderAmount: "",
-    maxUsageCount: "",
-    expiresAt: "",
+    discountPercent: "",
+    minimumAmount: "",
+    usageLimit: "",
+    expiryDate: "",
   });
 
   useEffect(() => {
@@ -41,22 +40,22 @@ function SellerCoupons() {
   };
 
   const resetForm = () =>
-    setForm({ code: "", discountType: "percentage", discountValue: "", minOrderAmount: "", maxUsageCount: "", expiresAt: "" });
+    setForm({ code: "", discountPercent: "", minimumAmount: "", usageLimit: "", expiryDate: "" });
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!form.code.trim() || !form.discountValue) {
-      toast.error("Code and discount value are required.");
+    if (!form.code.trim() || !form.discountPercent) {
+      toast.error("Code and discount percent are required.");
       return;
     }
     setSubmitting(true);
     try {
       await couponService.createCoupon({
-        ...form,
-        discountValue: Number(form.discountValue),
-        minOrderAmount: form.minOrderAmount ? Number(form.minOrderAmount) : null,
-        maxUsageCount: form.maxUsageCount ? Number(form.maxUsageCount) : null,
-        expiresAt: form.expiresAt || null,
+        code: form.code,
+        discountPercent: Number(form.discountPercent),
+        minimumAmount: form.minimumAmount ? Number(form.minimumAmount) : 0,
+        usageLimit: form.usageLimit ? Number(form.usageLimit) : 0,
+        expiryDate: form.expiryDate ? new Date(form.expiryDate).toISOString() : null,
       });
       toast.success("Coupon created!");
       setShowForm(false);
@@ -119,64 +118,51 @@ function SellerCoupons() {
           </div>
 
           <div>
-            <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262]">Discount Type</label>
-            <select
-              value={form.discountType}
-              onChange={(e) => setForm({ ...form, discountType: e.target.value })}
-              className="field mt-1"
-            >
-              <option value="percentage">Percentage (%)</option>
-              <option value="fixed">Fixed Amount ($)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262]">
-              Discount Value {form.discountType === "percentage" ? "(%)" : "($)"}
-            </label>
+            <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262]">Discount (%)</label>
             <input
               type="number"
-              min="0.01"
-              step="0.01"
-              value={form.discountValue}
-              onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
-              placeholder={form.discountType === "percentage" ? "20" : "10"}
+              min="1"
+              max="100"
+              step="1"
+              value={form.discountPercent}
+              onChange={(e) => setForm({ ...form, discountPercent: e.target.value })}
+              placeholder="20"
               required
               className="field mt-1"
             />
           </div>
 
           <div>
-            <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262]">Min Order Amount ($)</label>
+            <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262]">Minimum Order Amount ($)</label>
             <input
               type="number"
               min="0"
               step="0.01"
-              value={form.minOrderAmount}
-              onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
-              placeholder="Optional"
+              value={form.minimumAmount}
+              onChange={(e) => setForm({ ...form, minimumAmount: e.target.value })}
+              placeholder="Optional (0 = no minimum)"
               className="field mt-1"
             />
           </div>
 
           <div>
-            <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262]">Max Usage Count</label>
+            <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262]">Usage Limit</label>
             <input
               type="number"
-              min="1"
-              value={form.maxUsageCount}
-              onChange={(e) => setForm({ ...form, maxUsageCount: e.target.value })}
-              placeholder="Optional (unlimited)"
+              min="0"
+              value={form.usageLimit}
+              onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
+              placeholder="Optional (0 = unlimited)"
               className="field mt-1"
             />
           </div>
 
           <div>
-            <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262]">Expires At</label>
+            <label className="text-[11px] font-black uppercase tracking-widest text-[#6F6262]">Expiry Date</label>
             <input
               type="date"
-              value={form.expiresAt}
-              onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+              value={form.expiryDate}
+              onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
               min={new Date().toISOString().split("T")[0]}
               className="field mt-1"
             />
@@ -236,13 +222,11 @@ function SellerCoupons() {
                   </span>
                 </div>
                 <p className="text-sm text-[#7A7272] mt-0.5">
-                  {coupon.discountType === "percentage"
-                    ? `${coupon.discountValue}% off`
-                    : `$${coupon.discountValue} off`}
-                  {coupon.minOrderAmount ? ` · Min $${coupon.minOrderAmount}` : ""}
-                  {coupon.maxUsageCount ? ` · Max ${coupon.maxUsageCount} uses` : ""}
-                  {coupon.expiresAt
-                    ? ` · Expires ${new Date(coupon.expiresAt).toLocaleDateString()}`
+                  {coupon.discountPercent != null ? `${coupon.discountPercent}% off` : ""}
+                  {coupon.minimumAmount ? ` · Min $${coupon.minimumAmount}` : ""}
+                  {coupon.usageLimit ? ` · Limit ${coupon.usageLimit} uses` : ""}
+                  {coupon.expiryDate
+                    ? ` · Expires ${new Date(coupon.expiryDate).toLocaleDateString()}`
                     : ""}
                 </p>
                 {coupon.usageCount != null && (
