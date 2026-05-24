@@ -161,7 +161,6 @@ export const chatWithGroq = async (history, userMessage) => {
 
   const data = await res.json();
   const raw = data.choices?.[0]?.message?.content || "";
-  console.log("[groqService] raw:", raw);
 
   const searchMatch = raw.match(/SEARCH:\s*(\{[\s\S]*?\})/);
   let params = null;
@@ -184,7 +183,6 @@ export const chatWithGroq = async (history, userMessage) => {
       };
       // If strict, clear related interests
       if (params.strict) params.relatedInterests = [];
-      console.log("[groqService] params:", params);
     } catch (e) {
       console.warn("[groqService] JSON parse failed:", e);
     }

@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import AuthPromptModal from "../common/AuthPromptModal";
+import CartToast from "./CartToast";
 
 function ExploreProductCard({ product }) {
   const { isAuthenticated } = useAuth();
@@ -15,78 +16,22 @@ function ExploreProductCard({ product }) {
   const [authModal, setAuthModal] = useState(null);
 
   const liked = isInWishlist(product.id);
-
-  const image =
-    product.images?.[0] ||
-    product.imageUrl ||
-    product.thumbnailUrl ||
-    "";
-
-  const stock =
-    product.stock ??
-    product.quantity ??
-    product.stockCount ??
-    product.availableStock ??
-    0;
+  const image = product.images?.[0] || product.imageUrl || product.thumbnailUrl || "";
+  const stock = product.stock ?? product.quantity ?? product.stockCount ?? product.availableStock ?? 0;
 
   const handleWishlist = async () => {
-    if (!isAuthenticated) {
-      setAuthModal("wishlist");
-      return;
-    }
+    if (!isAuthenticated) { setAuthModal("wishlist"); return; }
     const wasLiked = liked;
     await toggleWishlist(product);
-    if (wasLiked) {
-      toast.success("Removed from wishlist.");
-    }
+    if (wasLiked) toast.success("Removed from wishlist.");
   };
 
   const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      setAuthModal("cart");
-      return;
-    }
-    if (stock <= 0) {
-      toast.error("This product is out of stock.");
-      return;
-    }
+    if (!isAuthenticated) { setAuthModal("cart"); return; }
+    if (stock <= 0) { toast.error("This product is out of stock."); return; }
     addToCart(product);
     toast.custom(
-      (t) => (
-        <div
-          className={
-            "flex items-center gap-3 bg-white rounded-[20px] shadow-2xl border border-[#EFE4DF] px-4 py-3 min-w-[240px] max-w-[320px] " +
-            (t.visible ? "toast-enter" : "toast-leave")
-          }
-        >
-          {image ? (
-            <img
-              src={image}
-              alt=""
-              className="w-11 h-11 rounded-[12px] object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="w-11 h-11 rounded-[12px] bg-[#F8E7EC] flex items-center justify-center flex-shrink-0 text-lg">
-              🛒
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="font-black text-[#1E1B1B] text-sm">Added to cart!</p>
-            <p className="text-xs text-[#7A7272] truncate mt-0.5">{product.title}</p>
-          </div>
-          <div className="w-7 h-7 bg-[#D90452] rounded-full flex items-center justify-center flex-shrink-0">
-            <svg viewBox="0 0 12 10" fill="none" className="w-3 h-3">
-              <path
-                d="M1 5l3 3 7-7"
-                stroke="#fff"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </div>
-      ),
+      (t) => <CartToast t={t} image={image} title={product.title} />,
       { duration: 2500 }
     );
   };
@@ -97,13 +42,9 @@ function ExploreProductCard({ product }) {
         <div className="relative">
           <Link to={`/product/${product.slug}`}>
             {image ? (
-              <img
-                src={image}
-                alt={product.title}
-                className="h-[240px] w-full object-cover"
-              />
+              <img src={image} alt={product.title} className="h-60 w-full object-cover" />
             ) : (
-              <div className="h-[240px] w-full bg-[#F8F1EC] flex items-center justify-center text-[#8B7C77] font-black">
+              <div className="h-60 w-full bg-[#F8F1EC] flex items-center justify-center text-[#8B7C77] font-black">
                 No Image
               </div>
             )}
@@ -124,21 +65,18 @@ function ExploreProductCard({ product }) {
           <button
             type="button"
             onClick={handleWishlist}
-            className={
-              "absolute top-4 right-4 w-11 h-11 rounded-full flex items-center justify-center transition " +
-              (liked
+            className={`absolute top-4 right-4 w-11 h-11 rounded-full flex items-center justify-center transition ${
+              liked
                 ? "bg-[#D90452] text-white"
-                : "bg-white text-[#1E1B1B] hover:bg-[#F8E7EC] hover:text-[#D90452]")
-            }
+                : "bg-white text-[#1E1B1B] hover:bg-[#F8E7EC] hover:text-[#D90452]"
+            }`}
           >
             {liked ? <GoHeartFill size={18} /> : <FiHeart size={18} />}
           </button>
         </div>
 
         <div className="p-5">
-          <p className="text-xs text-[#8B7C77] uppercase font-semibold">
-            {product.category}
-          </p>
+          <p className="text-xs text-[#8B7C77] uppercase font-semibold">{product.category}</p>
 
           <Link to={`/product/${product.slug}`}>
             <h3 className="mt-2 font-black text-[#1E1B1B] text-lg leading-snug min-h-[52px]">
@@ -146,18 +84,12 @@ function ExploreProductCard({ product }) {
             </h3>
           </Link>
 
-          <p className="mt-2 text-sm text-[#7A7272] line-clamp-2">
-            {product.description}
-          </p>
+          <p className="mt-2 text-sm text-[#7A7272] line-clamp-2">{product.description}</p>
 
           <div className="flex items-center gap-2 mt-4">
-            <span className="text-[#D90452] font-black text-xl">
-              ${product.price}
-            </span>
+            <span className="text-[#D90452] font-black text-xl">${product.price}</span>
             {!!product.oldPrice && (
-              <span className="text-sm text-[#A39A96] line-through">
-                ${product.oldPrice}
-              </span>
+              <span className="text-sm text-[#A39A96] line-through">${product.oldPrice}</span>
             )}
           </div>
 
@@ -165,12 +97,11 @@ function ExploreProductCard({ product }) {
             type="button"
             onClick={handleAddToCart}
             disabled={stock <= 0}
-            className={
-              "mt-5 w-full py-3 rounded-full font-black flex items-center justify-center gap-2 transition " +
-              (stock <= 0
+            className={`mt-5 w-full py-3 rounded-full font-black flex items-center justify-center gap-2 transition ${
+              stock <= 0
                 ? "bg-[#E7DDDA] text-[#8B7C77] cursor-not-allowed"
-                : "bg-[#D90452] text-white hover:bg-[#BE0348] btn-press")
-            }
+                : "bg-[#D90452] text-white hover:bg-[#BE0348] btn-press"
+            }`}
           >
             <FiShoppingCart />
             {stock <= 0 ? "Out of Stock" : "Add to Cart"}
