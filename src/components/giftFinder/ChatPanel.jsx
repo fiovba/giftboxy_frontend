@@ -171,7 +171,7 @@ function InputBar({ inputRef, input, setInput, aiLoading, onKeyDown, onSend }) {
           rows={1}
         />
         <button
-          onClick={onSend}
+          onClick={() => onSend()}
           disabled={aiLoading || !input.trim()}
           className="w-8 h-8 bg-[#D90452] text-white rounded-xl flex items-center justify-center shrink-0 disabled:opacity-30 btn-press transition shadow-sm"
         >
